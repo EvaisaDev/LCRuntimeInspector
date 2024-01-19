@@ -538,7 +538,18 @@ namespace RuntimeInspectorNamespace
 
 		public InspectorField CreateDrawerForVariable( MemberInfo variable, string variableName = null )
 		{
-			Type variableType = variable is ShaderPropertyInfo ? ((ShaderPropertyInfo)variable).GetPropertyType() : variable is FieldInfo ? ( (FieldInfo) variable ).FieldType : ( (PropertyInfo) variable ).PropertyType;
+            //Plugin.logger.LogInfo($"Creating drawer for variable: {variable.Name} {variable}");
+
+            Type variableType = variable switch
+            {
+                ShaderPropertyInfo shaderPropertyInfo => shaderPropertyInfo.GetPropertyType(),
+                FieldInfo fieldInfo => fieldInfo.FieldType,
+                PropertyInfo propertyInfo => propertyInfo.PropertyType,
+                _ => throw new Exception("Property not valid!!")
+			};
+
+            //Plugin.logger.LogInfo($"Type: {variableType.FullName}");
+			
 			InspectorField variableDrawer = Inspector.CreateDrawerForType( variableType, drawArea, Depth + 1, true, variable );
 			if( variableDrawer != null )
 			{

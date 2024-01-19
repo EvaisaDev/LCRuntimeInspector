@@ -69,7 +69,8 @@ namespace RuntimeInspectorNamespace
 		{
             if (variable is ShaderPropertyInfo shaderPropertyInfo)
             {
-                return ((!shaderPropertyInfo.isHidden) ? ((byte)1) : ((byte)0)) != 0;
+				//Plugin.logger.LogInfo("ShaderPropertyInfo: " + shaderPropertyInfo.name);
+                return !shaderPropertyInfo.isHidden;
             }
             if (ShaderInspector.hideRedundantProperties.Value && variable != null && variable.DeclaringType == typeof(Material) && ShaderInspector.redundantPropertyNames.Contains(variable.Name))
             {

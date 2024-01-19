@@ -90,7 +90,7 @@ namespace LCRuntimeInspector.RuntimeInspector.RuntimeInspector
 
         public static void HandleAttribute(ShaderPropertyInfo prop, string attribute)
         {
-            Plugin.logger.LogInfo($"HandleAttribute: {prop.name} {attribute}");
+            //Plugin.logger.LogInfo($"HandleAttribute: {prop.name} {attribute}");
             if (TryGetShaderAttribute(attribute, "Toggle", out var substring))
             {
                 prop.toggleKeyword = substring;

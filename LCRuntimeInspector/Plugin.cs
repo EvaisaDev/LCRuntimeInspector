@@ -40,6 +40,10 @@ namespace LCRuntimeInspector
         public static GameObject draggedReferenceItemAsset;
         public static GameObject colorPickerAsset;
 
+        public Plugin()
+        {
+            ShaderInspector.PreInit();
+        }
 
         private void Awake()
         {

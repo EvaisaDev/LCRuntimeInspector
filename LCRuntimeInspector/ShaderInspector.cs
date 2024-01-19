@@ -45,8 +45,22 @@ namespace LCRuntimeInspector
             return value;
         }
 
+        public static void PreInit()
+        {
+            HashSet<string> obj = new HashSet<string>();
+            obj.Add("mainTexture");
+            obj.Add("mainTextureOffset");
+            obj.Add("mainTextureScale");
+            obj.Add("color");
+            redundantPropertyNames = obj;
+            shaderPropertiesCache = new Dictionary<Shader, ShaderPropertyInfo[]>();
+            targetMats = new Stack<Material>();
+        }
+
         public static void Init()
         {
+
+
             nameFormat = LCRuntimeInspector.Plugin.config.Bind("ShaderInspector", "nameFormat", "{0}");
             scaleFormat = LCRuntimeInspector.Plugin.config.Bind("ShaderInspector", "scaleFormat", "{0}");
             offsetFormat = LCRuntimeInspector.Plugin.config.Bind("ShaderInspector", "offsetFormat", "{0}");

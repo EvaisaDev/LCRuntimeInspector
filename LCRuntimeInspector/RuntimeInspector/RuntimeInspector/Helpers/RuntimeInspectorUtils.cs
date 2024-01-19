@@ -523,7 +523,7 @@ namespace RuntimeInspectorNamespace
 		{
 			MemberInfo[] result;
 			if( typeToVariables.TryGetValue( type, out result ) )
-				return result;
+				goto returnResult;
 
 			validVariablesList.Clear();
 			typesToSearchForVariablesList.Clear();
@@ -661,15 +661,24 @@ namespace RuntimeInspectorNamespace
 				typeToVariables[currType] = result;
 			}
 
-            if (typeof(Material).IsAssignableFrom(type) && ShaderInspector.targetMats.Count > 0)
-            {
-                Material material = ShaderInspector.targetMats.Peek();
-                if ((bool)material && (bool)material.shader)
-                {
+			returnResult:
+
+            //Plugin.logger.LogInfo( $"Found {validVariablesList.Count} variables in {type.FullName}" );
+
+
+			if (typeof(Material).IsAssignableFrom(type) && ShaderInspector.targetMats.Count > 0)
+			{
+				//Plugin.logger.LogInfo("Adding shader properties to material variables");
+				Material material = ShaderInspector.targetMats.Peek();
+				if (material && material.shader)
+				{
+                    //Plugin.logger.LogInfo($"whut da helll");
                     ShaderPropertyInfo[] shaderPropertyInfos = ShaderInspector.GetShaderPropertyInfos(material.shader);
-					result = result.ToList().Concat(((IEnumerable)(object)shaderPropertyInfos).Cast<MemberInfo>().ToArray()).ToArray();
+                    result = result.ToList().Concat(shaderPropertyInfos).ToArray();
                 }
-            }
+			}
+
+			Plugin.logger.LogInfo( $"Found {result.Length} variables in {type.FullName}" );
 
             return result;
 		}

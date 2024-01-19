@@ -102,6 +102,8 @@ namespace RuntimeInspectorNamespace
 
 		public void CreateDrawersForVariables( params string[] variables )
 		{
+			//Plugin.logger.LogInfo($"Creating drawer for type: {Value.GetType().FullName}");
+
             if (Value is Material item)
             {
                 ShaderInspector.targetMats.Push(item);
