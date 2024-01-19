@@ -1,0 +1,55 @@
+# Exclude everything
+/*
+
+# Specific includes
+
+## Build System/Scripts
+!/.config/
+!NuGet.Config
+!Directory.Build.props
+!build.sh
+!build.ps1
+!build.cmd
+
+## Markdowns
+!*.md
+!LICENSE
+
+## Editorconfig
+!.editorconfig
+
+## important Git files
+!.gitmodules
+!.gitignore
+!.gitattributes
+!.git-blame-ignore-revs
+
+### Git Hooks
+!/hooks
+
+## GitHub specific
+!.github/
+
+## Solution
+!LCRuntimeInspector.sln
+
+### LCRuntimeInspector project
+!/LCRuntimeInspector
+LCRuntimeInspector/[Bb]in
+LCRuntimeInspector/[Oo]bj
+LCRuntimeInspector/[Dd]ist
+
+# Explicit exceptions/ignores
+
+## Any `.user` (e.g. `.csproj.user`)
+**.user
+
+### Unity Project
+!/UnityProject
+/UnityProject/*
+!/UnityProject/Assets
+!/UnityProject/Packages
+!/UnityProject/ProjectSettings
+
+### Assemblies
+**.dll

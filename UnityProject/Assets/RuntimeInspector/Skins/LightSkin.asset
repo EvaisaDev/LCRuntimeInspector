@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1644853933, guid: bd1a449bdc74e56479fa271b4c5f506d, type: 3}
+  m_Name: LightSkin
+  m_EditorClassIdentifier: 
+  m_font: {fileID: 0}
+  m_fontSize: 12
+  m_lineHeight: 30
+  m_indentAmount: 12
+  m_labelWidthPercentage: 0.4
+  m_expandArrowSpacing: 10
+  m_windowColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_backgroundColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_textColor: {r: 0, g: 0, b: 0, a: 1}
+  m_scrollbarColor: {r: 0, g: 0, b: 0, a: 1}
+  m_expandArrowColor: {r: 0, g: 0, b: 0, a: 1}
+  m_inputFieldNormalBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  m_inputFieldInvalidBackgroundColor: {r: 1, g: 0, b: 0, a: 1}
+  m_inputFieldTextColor: {r: 0, g: 0, b: 0, a: 1}
+  m_toggleCheckmarkColor: {r: 0, g: 0, b: 0, a: 1}
+  m_sliderBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  m_sliderThumbColor: {r: 0, g: 0, b: 0, a: 1}
+  m_buttonBackgroundColor: {r: 1, g: 1, b: 1, a: 1}
+  m_buttonTextColor: {r: 0, g: 0, b: 0, a: 1}
+  m_selectedItemBackgroundColor: {r: 0, g: 0, b: 1, a: 1}
+  m_selectedItemTextColor: {r: 0, g: 0, b: 0, a: 1}
