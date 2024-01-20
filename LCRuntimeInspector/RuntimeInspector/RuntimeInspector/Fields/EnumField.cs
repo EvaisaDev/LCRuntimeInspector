@@ -65,6 +65,31 @@ namespace RuntimeInspectorNamespace
 #endif
 		}
 
+		protected override void OnBoundInternal( MemberInfo variable)
+		{
+            base.OnBoundInternal(variable);
+            if (!enumNames.TryGetValue(BoundVariableType, out currEnumNames) || !enumValues.TryGetValue(BoundVariableType, out currEnumValues))
+            {
+                string[] names = Enum.GetNames(BoundVariableType);
+                Array values = Enum.GetValues(BoundVariableType);
+
+                currEnumNames = new List<string>(names.Length);
+                currEnumValues = new List<object>(names.Length);
+
+                for (int i = 0; i < names.Length; i++)
+                {
+                    currEnumNames.Add(names[i]);
+                    currEnumValues.Add(values.GetValue(i));
+                }
+
+                enumNames[BoundVariableType] = currEnumNames;
+                enumValues[BoundVariableType] = currEnumValues;
+            }
+
+            input.ClearOptions();
+            input.AddOptions(currEnumNames);
+        }
+
 		protected override void OnBound( MemberInfo variable )
 		{
 
@@ -73,42 +98,20 @@ namespace RuntimeInspectorNamespace
 			{
 				RuntimeInspectorNamespace.EnumField.enumNames[typeof(ShaderPropertyInfo.MaterialEnum)] = shaderPropertyInfo.explicitEnumNames.ToList();
 				RuntimeInspectorNamespace.EnumField.enumValues[typeof(ShaderPropertyInfo.MaterialEnum)] = shaderPropertyInfo.explicitEnumValues.ToList();
-			}
 
-			try
-			{
-                base.OnBound(variable);
-                if (!enumNames.TryGetValue(BoundVariableType, out currEnumNames) || !enumValues.TryGetValue(BoundVariableType, out currEnumValues))
+				try
 				{
-					string[] names = Enum.GetNames(BoundVariableType);
-					Array values = Enum.GetValues(BoundVariableType);
-
-					currEnumNames = new List<string>(names.Length);
-					currEnumValues = new List<object>(names.Length);
-
-					for (int i = 0; i < names.Length; i++)
-					{
-						currEnumNames.Add(names[i]);
-						currEnumValues.Add(values.GetValue(i));
-					}
-
-					enumNames[BoundVariableType] = currEnumNames;
-					enumValues[BoundVariableType] = currEnumValues;
+					OnBoundInternal(variable);
+					return;
 				}
-
-                input.ClearOptions();
-                input.AddOptions(currEnumNames);
-            }
-            finally
-			{
-                if (variable is ShaderPropertyInfo && BoundVariableType == typeof(ShaderPropertyInfo.MaterialEnum))
+				finally
 				{
-                    RuntimeInspectorNamespace.EnumField.enumNames.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
-                    RuntimeInspectorNamespace.EnumField.enumValues.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
-                }
+					RuntimeInspectorNamespace.EnumField.enumNames.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
+					RuntimeInspectorNamespace.EnumField.enumValues.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
+				}
             }
-
-		}
+            OnBoundInternal(variable);
+        }
 
 		protected override void OnInspectorChanged()
 		{

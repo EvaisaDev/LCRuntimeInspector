@@ -132,7 +132,7 @@ namespace RuntimeInspectorNamespace
             {
                 string text = variableName ?? string.Format(ShaderInspector.nameFormat.Value, shaderPropertyInfo.description, shaderPropertyInfo.name);
                 BindTo(shaderPropertyInfo.GetPropertyType(), text, shaderPropertyInfo.GetGetter(parent), shaderPropertyInfo.GetSetter(parent), variable);
-                if ((bool)variableNameText)
+                if (variableNameText)
                 {
                     variableNameText.text = text;
                 }
@@ -184,14 +184,16 @@ namespace RuntimeInspectorNamespace
             {
                 return;
             }
-            RuntimeInspectorNamespace.InspectorField.Setter b = delegate
+
+            setter += value =>
             {
                 if (parent is RuntimeInspectorNamespace.ExpandableInspectorField expandableInspectorField)
                 {
                     expandableInspectorField.RegenerateElements();
                 }
             };
-            setter = (RuntimeInspectorNamespace.InspectorField.Setter)Delegate.Combine(setter, b);
+
+
         }
 
 		public void BindTo( Type variableType, string variableName, Getter getter, Setter setter, MemberInfo variable = null )
@@ -216,12 +218,18 @@ namespace RuntimeInspectorNamespace
 			Inspector.PoolDrawer( this );
 		}
 
-		protected virtual void OnBound( MemberInfo variable )
+		protected virtual void OnBound(MemberInfo variable)
 		{
 			RefreshValue();
 		}
 
-		protected virtual void OnUnbound()
+
+		protected virtual void OnBoundInternal (MemberInfo variable)
+        {
+            RefreshValue();
+        }
+
+        protected virtual void OnUnbound()
 		{
 			m_value = null;
 		}

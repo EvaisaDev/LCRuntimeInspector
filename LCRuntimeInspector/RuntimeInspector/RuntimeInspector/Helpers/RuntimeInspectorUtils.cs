@@ -666,13 +666,11 @@ namespace RuntimeInspectorNamespace
             //Plugin.logger.LogInfo( $"Found {validVariablesList.Count} variables in {type.FullName}" );
 
 
-			if (typeof(Material).IsAssignableFrom(type) && ShaderInspector.targetMats.Count > 0)
+			if (typeof(Material).IsAssignableFrom(type))
 			{
-				//Plugin.logger.LogInfo("Adding shader properties to material variables");
 				Material material = ShaderInspector.targetMats.Peek();
 				if (material && material.shader)
 				{
-                    //Plugin.logger.LogInfo($"whut da helll");
                     ShaderPropertyInfo[] shaderPropertyInfos = ShaderInspector.GetShaderPropertyInfos(material.shader);
                     result = result.ToList().Concat(shaderPropertyInfos).ToArray();
                 }
