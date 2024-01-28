@@ -4,6 +4,7 @@ using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -75,24 +76,21 @@ namespace LCRuntimeInspector
             hideRedundantProperties = Plugin.config.Bind<bool>("MaterialInspector", "Hide Redundant Properties", true, "Hide the Main Texture and Color material properties that are already represented in the shader properties.");
             hidePerRendererData = Plugin.config.Bind<bool>("MaterialInspector", "Hide Per Renderer Data", true, "Hide properties that are usually managed per renderer.");
 
-
-            new Hook(typeof(LayoutRebuilder).GetMethod("Rebuild", new Type[] { typeof(CanvasUpdate) }), typeof(ShaderInspector).GetMethod("LayoutRebuilder_Rebuild"));
+            new Hook(typeof(CanvasUpdateRegistry).GetMethod("PerformUpdate", BindingFlags.NonPublic | BindingFlags.Instance), typeof(ShaderInspector).GetMethod("CanvasUpdateRegistry_PerformUpdate"));
         }
 
-        private static int depth = 0;
+        private static bool recursive = false;
 
-        public static void LayoutRebuilder_Rebuild(Action<LayoutRebuilder, CanvasUpdate> orig, LayoutRebuilder self, CanvasUpdate executing)
+        // fix weird unity crash, because of recursive canvas update.. the fact that we need to do this is stupid but okay.
+        public static void CanvasUpdateRegistry_PerformUpdate(Action<CanvasUpdateRegistry> orig, CanvasUpdateRegistry self)
         {
-            if(depth > 15)
-            {
-                depth = 0;
+            if (recursive)
                 return;
-            }
-            depth++;
 
-            Plugin.logger.LogInfo("Rebuild: " + self.transform.name + " " + executing);
+            recursive = true;
+            orig(self);
+            recursive = false;
 
-            orig(self, executing);
         }
 
     }
