@@ -180,20 +180,6 @@ namespace RuntimeInspectorNamespace
 			else
 				throw new ArgumentException( "Variable can either be a field or a property" );
 
-            if (!(variable != null) || !(variable.DeclaringType == typeof(Material)) || !(variable.Name == "shader"))
-            {
-                return;
-            }
-
-            setter += value =>
-            {
-                if (parent is RuntimeInspectorNamespace.ExpandableInspectorField expandableInspectorField)
-                {
-                    expandableInspectorField.RegenerateElements();
-                }
-            };
-
-
         }
 
 		public void BindTo( Type variableType, string variableName, Getter getter, Setter setter, MemberInfo variable = null )
@@ -546,8 +532,6 @@ namespace RuntimeInspectorNamespace
 
 		public InspectorField CreateDrawerForVariable( MemberInfo variable, string variableName = null )
 		{
-            //Plugin.logger.LogInfo($"Creating drawer for variable: {variable.Name} {variable}");
-
             Type variableType = variable switch
             {
                 ShaderPropertyInfo shaderPropertyInfo => shaderPropertyInfo.GetPropertyType(),
@@ -556,8 +540,6 @@ namespace RuntimeInspectorNamespace
                 _ => throw new Exception("Property not valid!!")
 			};
 
-            //Plugin.logger.LogInfo($"Type: {variableType.FullName}");
-			
 			InspectorField variableDrawer = Inspector.CreateDrawerForType( variableType, drawArea, Depth + 1, true, variable );
 			if( variableDrawer != null )
 			{
