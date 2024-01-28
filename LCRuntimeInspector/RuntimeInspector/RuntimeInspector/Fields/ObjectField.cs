@@ -100,72 +100,77 @@ namespace RuntimeInspectorNamespace
 				customEditor.Refresh();
 		}
 
-		public void CreateDrawersForVariables( params string[] variables )
+		internal void CreateDrawersForVariablesInternal(params string[] variables)
 		{
-			//Plugin.logger.LogInfo($"Creating drawer for type: {Value.GetType().FullName}");
-
-            if (Value is Material item)
+            if (variables == null || variables.Length == 0)
             {
-                ShaderInspector.targetMats.Push(item);
+                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
+                    CreateDrawerForVariable(variable);
             }
-
-            try
+            else
             {
-                if ( variables == null || variables.Length == 0 )
-				{
-					foreach( MemberInfo variable in Inspector.GetExposedVariablesForType( Value.GetType() ) )
-						CreateDrawerForVariable( variable );
-				}
-				else
-				{
-					foreach( MemberInfo variable in Inspector.GetExposedVariablesForType( Value.GetType() ) )
-					{
-						if( Array.IndexOf( variables, variable.Name ) >= 0 )
-							CreateDrawerForVariable( variable );
-					}
-				}
-            }
-            finally
-            {
-                if (Value is Material)
+                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
                 {
-                    ShaderInspector.targetMats.Pop();
+                    if (Array.IndexOf(variables, variable.Name) >= 0)
+                        CreateDrawerForVariable(variable);
                 }
             }
         }
 
-		public void CreateDrawersForVariablesExcluding( params string[] variablesToExclude )
+
+        public void CreateDrawersForVariables( params string[] variables )
 		{
-
-			if (Value is Material item)
-			{
-				ShaderInspector.targetMats.Push(item);
-			}
-
-			try
-			{
-				if (variablesToExclude == null || variablesToExclude.Length == 0)
-				{
-					foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-						CreateDrawerForVariable(variable);
-				}
-				else
-				{
-					foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-					{
-						if (Array.IndexOf(variablesToExclude, variable.Name) < 0)
-							CreateDrawerForVariable(variable);
-					}
-				}
-			}
-			finally
-			{
-                if (Value is Material)
+            if (Value is Material item)
+            {
+                ShaderInspector.targetMats.Push(item);
+                try
+                {
+                    CreateDrawersForVariablesInternal(variables);
+                    return;
+                }
+                finally
                 {
                     ShaderInspector.targetMats.Pop();
                 }
             }
-		}
+			CreateDrawersForVariablesInternal(variables);
+        }
+
+		internal void CreateDrawersForVariablesExcludingInternal(params string[] variablesToExclude)
+		{
+            if (variablesToExclude == null || variablesToExclude.Length == 0)
+            {
+                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
+                    CreateDrawerForVariable(variable);
+            }
+            else
+            {
+                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
+                {
+                    if (Array.IndexOf(variablesToExclude, variable.Name) < 0)
+                        CreateDrawerForVariable(variable);
+                }
+            }
+        }
+
+
+        public void CreateDrawersForVariablesExcluding( params string[] variablesToExclude )
+		{
+            if (Value is Material item)
+            {
+                ShaderInspector.targetMats.Push(item);
+                try
+                {
+                    CreateDrawersForVariablesExcludingInternal(variablesToExclude);
+                    return;
+                }
+                finally
+                {
+                    ShaderInspector.targetMats.Pop();
+                }
+            }
+            CreateDrawersForVariablesExcludingInternal(variablesToExclude);
+        }
 
 		private bool CanInitializeNewObject()
 		{

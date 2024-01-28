@@ -1,11 +1,14 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
+using MonoMod.RuntimeDetour;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 namespace LCRuntimeInspector
 {
@@ -72,6 +75,22 @@ namespace LCRuntimeInspector
             offsetFormat = Plugin.config.Bind<string>("MaterialInspector", "Texture Offset Format", "Offset", "Format string for texture offset properties. {0} is external name of the texture.");
             hideRedundantProperties = Plugin.config.Bind<bool>("MaterialInspector", "Hide Redundant Properties", true, "Hide the Main Texture and Color material properties that are already represented in the shader properties.");
             hidePerRendererData = Plugin.config.Bind<bool>("MaterialInspector", "Hide Per Renderer Data", true, "Hide properties that are usually managed per renderer.");
+
+            new Hook(typeof(CanvasUpdateRegistry).GetMethod("PerformUpdate", BindingFlags.NonPublic | BindingFlags.Instance), typeof(ShaderInspector).GetMethod("CanvasUpdateRegistry_PerformUpdate"));
+        }
+
+        private static bool recursive = false;
+
+        // fix weird unity crash, because of recursive canvas update.. the fact that we need to do this is stupid but okay.
+        public static void CanvasUpdateRegistry_PerformUpdate(Action<CanvasUpdateRegistry> orig, CanvasUpdateRegistry self)
+        {
+            if (recursive)
+                return;
+
+            recursive = true;
+            orig(self);
+            recursive = false;
+
         }
 
     }
