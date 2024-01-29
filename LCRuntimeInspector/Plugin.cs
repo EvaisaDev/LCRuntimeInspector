@@ -22,8 +22,8 @@ namespace LCRuntimeInspector
     public class Plugin : BaseUnityPlugin
     {   
         public const string ModGUID = "evaisa.runtimeinspector";
-        public const string ModName = "LCRuntimeInspector";
-        public const string ModVersion = "0.1.0";
+        public const string ModName = MyPluginInfo.PLUGIN_NAME;
+        public const string ModVersion = MyPluginInfo.PLUGIN_VERSION;
 
         public static ManualLogSource logger;
         public static ConfigFile config;
