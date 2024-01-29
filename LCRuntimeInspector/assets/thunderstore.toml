@@ -20,7 +20,7 @@ readme = "../../README.md"
 outdir = "../dist"
 
 [[build.copy]]
-source = "../bin/Release/netstandard2.1/LCRuntimeInspector.dll"
+source = "../bin/Release/netstandard2.1/com.github.evaisa.lc_runtime_inspector.dll"
 target = "BepInEx/plugins/Runtime_Inspector/"
 
 [[build.copy]]

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <AssemblyName>LCRuntimeInspector</AssemblyName>
+    <AssemblyName>com.github.evaisadev.lc_runtime_inspector</AssemblyName>
     <Product>LCRuntimeInspector</Product>
     <Description>Unity Runtime Inspector For Lethal Company</Description>
     <RestoreAdditionalProjectSources>
