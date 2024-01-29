@@ -1,0 +1,40 @@
+<Project>
+  <!-- Build configurations -->
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>AnyCPU</Platforms>
+  </PropertyGroup>
+
+  <!-- compiler/msbuild switches -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <ClearCopyLocalPaths>true</ClearCopyLocalPaths>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <!-- Release optimisations -->
+  <PropertyGroup Condition="$(Configuration) == 'Release'">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+  <!-- .NET Framework (.NET 4) reference assemblies  -->
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all"/>
+  </ItemGroup>
+
+  <!-- MinVer -->
+  <PropertyGroup>
+    <MinVerDefaultPreReleaseIdentifiers>dev</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="MinVer" Version="4.3.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <!-- Import local user props -->
+  <Import Project="$(SolutionDir)LCRuntimeInspector.props.user" Condition="$(CI) != 'true'"/>
+</Project>
