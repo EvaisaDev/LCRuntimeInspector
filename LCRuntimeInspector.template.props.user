@@ -2,11 +2,11 @@
 <Project>
     <PropertyGroup>
         <LethalCompanyDir>C:/Program Files (x86)/Steam/steamapps/common/Lethal Company/</LethalCompanyDir>
-        <TestProfileDir>$(AppData)/r2modmanPlus-local/LethalCompany/profiles/Test Sigurd/</TestProfileDir>
+        <TestProfileDir>$(AppData)/r2modmanPlus-local/LethalCompany/profiles/Test Runtime Inspector/</TestProfileDir>
     </PropertyGroup>
 
     <!-- Enable by setting Condition="true" -->
-    <Target Name="CopyToTestProfile" DependsOnTargets="NetcodePatch" AfterTargets="PostBuildEvent" Condition="false">
+    <Target Name="CopyToTestProfile" AfterTargets="PostBuildEvent" Condition="false">
         <PropertyGroup>
             <TestProfilePluginDir>$(TestProfileDir)BepInEx/plugins/Evaisa-Runtime_Inspector/Runtime_Inspector/</TestProfilePluginDir>
         </PropertyGroup>
