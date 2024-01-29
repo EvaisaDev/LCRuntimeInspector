@@ -7,6 +7,7 @@
 !/.config/
 !NuGet.Config
 !Directory.Build.props
+!Directory.Build.targets
 !build.sh
 !build.ps1
 !build.cmd
@@ -30,6 +31,9 @@
 ## GitHub specific
 !.github/
 
+## Libs
+!/lib/
+
 ## Solution
 !LCRuntimeInspector.sln
 
@@ -39,17 +43,20 @@ LCRuntimeInspector/[Bb]in
 LCRuntimeInspector/[Oo]bj
 LCRuntimeInspector/[Dd]ist
 
-# Explicit exceptions/ignores
-
-## Any `.user` (e.g. `.csproj.user`)
-**.user
-
 ### Unity Project
 !/UnityProject
 /UnityProject/*
 !/UnityProject/Assets
+/UnityProject/Assets/Plugins/*.dll
+/UnityProject/Assets/Plugins/ReferenceAssemblies/*.dll
+/UnityProject/Assets/Plugins/ReferenceAssemblies/*.meta
+/UnityProject/Assets/AssetBundles/*
+!/UnityProject/Assets/AssetBundles/.gitkeep
 !/UnityProject/Packages
 !/UnityProject/ProjectSettings
 
-### Assemblies
-**.dll
+# Explicit exceptions/ignores
+
+## Any `.user` (e.g. `.csproj.user`)
+**.user
+!**.template.*.user

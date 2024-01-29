@@ -1,8 +1,8 @@
-﻿using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using UnityEngine;
 using UnityEngine.UI;
 

@@ -1,9 +1,8 @@
-﻿using LCRuntimeInspector;
-using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
-using NAudio.Wave;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using LCRuntimeInspector;
+using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using UnityEngine;
 using UnityEngine.UI;
 

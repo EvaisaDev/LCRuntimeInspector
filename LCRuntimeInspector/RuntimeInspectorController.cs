@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace LCRuntimeInspector
 {
@@ -13,7 +10,6 @@ namespace LCRuntimeInspector
 
         public void Awake()
         {
-            
             Plugin.Inputs.OpenHierarchy.performed += OpenHierarchy;
             Plugin.Inputs.OpenInspector.performed += OpenInspector;
             Plugin.Inputs.ToggleCursor.performed += ToggleCursor;

@@ -1,9 +1,8 @@
-﻿using LCRuntimeInspector;
-using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
-using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using LCRuntimeInspector;
+using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using UnityEngine;
 using Visibility = RuntimeInspectorNamespace.RuntimeInspector.VariableVisibility;
 

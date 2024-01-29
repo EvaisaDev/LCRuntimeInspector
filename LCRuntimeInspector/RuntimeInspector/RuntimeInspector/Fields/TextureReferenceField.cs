@@ -1,7 +1,7 @@
-﻿using System;
-#if !UNITY_EDITOR && NETFX_CORE
+﻿#if !UNITY_EDITOR && NETFX_CORE
 using System.Reflection;
 #endif
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;

@@ -1,29 +1,21 @@
-﻿using BepInEx;
-using System.Security.Permissions;
-using BepInEx.Logging;
-using BepInEx.Configuration;
-using UnityEngine;
+﻿using System.IO;
 using System.Reflection;
-using System;
-using static UnityEngine.Rendering.HighDefinition.HDAdditionalCameraData;
-using System.IO;
-using RuntimeInspectorNamespace;
-using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
-using System.Collections.Generic;
-using UnityEngine.Rendering;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
+using System.Security.Permissions;
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+using UnityEngine;
 
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace LCRuntimeInspector
 {
     [BepInPlugin(ModGUID, ModName, ModVersion)]
-    [BepInDependency("com.rune580.LethalCompanyInputUtils")]
+    [BepInDependency("com.rune580.LethalCompanyInputUtils", "0.6.1")]
     public class Plugin : BaseUnityPlugin
-    {   
-        public const string ModGUID = "evaisa.runtimeinspector";
-        public const string ModName = "LCRuntimeInspector";
-        public const string ModVersion = "0.1.0";
+    {
+        public const string ModGUID = MyPluginInfo.PLUGIN_GUID;
+        public const string ModName = MyPluginInfo.PLUGIN_NAME;
+        public const string ModVersion = MyPluginInfo.PLUGIN_VERSION;
 
         public static ManualLogSource logger;
         public static ConfigFile config;

@@ -1,74 +1,138 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <AssemblyName>com.github.evaisadev.lc_runtime_inspector</AssemblyName>
+    <Product>LCRuntimeInspector</Product>
+    <Description>Unity Runtime Inspector For Lethal Company</Description>
+    <RestoreAdditionalProjectSources>
+      https://api.nuget.org/v3/index.json;
+      https://nuget.bepinex.dev/v3/index.json;
+    </RestoreAdditionalProjectSources>
+    <IsThunderstorePackable>true</IsThunderstorePackable>
+  </PropertyGroup>
 
+  <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1" PrivateAssets="all">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
+    <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" PrivateAssets="all" />
+  </ItemGroup>
+  
+  <!-- Runtime dependencies (common) -->
+  <ItemGroup>
+    <PackageReference Include="BepInEx.Core" Version="5.*" />
+    <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" />
+    <Reference Include="MMHOOK_Assembly-CSharp">
+      <HintPath>$(ProjectDir)../lib/MMHOOK_Assembly-CSharp.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <!-- Runtime dependencies (local) -->
+  <ItemGroup Condition="$(CI) != 'true'">
+    <Reference Include="Assembly-CSharp">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.InputSystem">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Unity.InputSystem.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.Netcode.Runtime">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Unity.Netcode.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.RenderPipelines.HighDefinition.Runtime">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Unity.RenderPipelines.HighDefinition.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="LethalCompanyInputUtils">
+      <HintPath>$(TestProfileDir)BepInEx/plugins/Rune580-LethalCompany_InputUtils/LethalCompanyInputUtils/LethalCompanyInputUtils.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  
+  <!-- Runtime dependencies (CI) -->
+  <ItemGroup Condition="$(CI) == 'true'">
+    <PackageReference Include="LethalCompany.GameLibs.Steam" Version="49.0.0-alpha.1" />
+    <PackageReference Include="Rune580.LethalCompany_InputUtils" Version="0.6.1" />
+  </ItemGroup>
+  
+  <!-- Unity project dependencies -->
+  <ItemGroup Condition="$(CI) != 'true'">
+    <Reference Include="AmazingAssets.TerrainToMesh">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/AmazingAssets.TerrainToMesh.dll</HintPath>
+    </Reference>
+    <Reference Include="ClientNetworkTransform">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/ClientNetworkTransform.dll</HintPath>
+    </Reference>
+    <Reference Include="DissonanceVoip">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/DissonanceVoip.dll</HintPath>
+    </Reference>
+    <Reference Include="Facepunch Transport for Netcode for GameObjects">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Facepunch Transport for Netcode for GameObjects.dll</HintPath>
+    </Reference>
+    <Reference Include="Facepunch.Steamworks.Win64">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Facepunch.Steamworks.Win64.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Newtonsoft.Json.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="CopyAssembliesToUnityProject" AfterTargets="PostBuildEvent" Condition="$(CI) != 'true'">
     <PropertyGroup>
-        <TargetFramework>netstandard2.1</TargetFramework>
-        <AssemblyName>LCRuntimeInspector</AssemblyName>
-        <Description>Unity Runtime Inspector For Lethal Company</Description>
-        <Version>1.0.0</Version>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <LangVersion>latest</LangVersion>
-		<RestoreAdditionalProjectSources>
-		  https://api.nuget.org/v3/index.json;
-		  https://nuget.bepinex.dev/v3/index.json;
-		</RestoreAdditionalProjectSources>
+      <UnityProjectPluginsDir>$(ProjectDir)../UnityProject/Assets/Plugins/</UnityProjectPluginsDir>
+      <UnityProjectReferenceAssemblyDir>$(UnityProjectPluginsDir)ReferenceAssemblies</UnityProjectReferenceAssemblyDir>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <DebugType>portable</DebugType>
+    
+    <ItemGroup>
+      <CopyToUnityRefAssemblyName Include="MMHOOK_Assembly-CSharp"/>
+      <CopyToUnityRefAssemblyName Include="LethalCompanyInputUtils"/>
+      <CopyToUnityRefAssemblyName Include="BepInEx"/>
+      <CopyToUnityRefAssemblyName Include="BepInEx.Harmony"/>
+      <CopyToUnityRefAssemblyName Include="0Harmony"/>
+      <CopyToUnityRefAssemblyName Include="Mono.Cecil"/>
+      <CopyToUnityRefAssemblyName Include="Mono.Cecil.Rocks"/>
+      <CopyToUnityRefAssemblyName Include="MonoMod.Utils"/>
+      <CopyToUnityRefAssemblyName Include="MonoMod.RuntimeDetour"/>
+      <CopyToUnityRefAssemblyName Include="Assembly-CSharp-firstpass"/>
+      <CopyToUnityRefAssemblyName Include="AmazingAssets.TerrainToMesh"/>
+      <CopyToUnityRefAssemblyName Include="ClientNetworkTransform"/>
+      <CopyToUnityRefAssemblyName Include="DissonanceVoip"/>
+      <CopyToUnityRefAssemblyName Include="Facepunch Transport for Netcode for GameObjects"/>
+      <CopyToUnityRefAssemblyName Include="Facepunch.Steamworks.Win64"/>
+      <CopyToUnityRefAssemblyName Include="Newtonsoft.Json"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+      <CopyToUnityRefAssemblyPath Include="@(ReferencePathWithRefAssemblies)">
+        <CompareName>%(CopyToUnityRefAssemblyName.Identity)</CompareName>
+      </CopyToUnityRefAssemblyPath>
+      <CopyToUnityRefAssemblyPath Remove="@(CopyToUnityRefAssemblyPath)" Condition="%(FileName) != %(CompareName)"/>
+    </ItemGroup>
+    
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(UnityProjectPluginsDir)" SkipUnchangedFiles="true"/>
+    <Copy SourceFiles="@(CopyToUnityRefAssemblyPath)" DestinationFolder="$(UnityProjectReferenceAssemblyDir)" SkipUnchangedFiles="true"/>
+  </Target>
+  
+  <Target Name="CopyBundleFromUnityProject" BeforeTargets="PackThunderstore">
+    <PropertyGroup>
+      <UnityProjectAssetBundlePath>$(ProjectDir)../UnityProject/Assets/AssetBundles/runtimeinspector</UnityProjectAssetBundlePath>
     </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-      <DebugType>portable</DebugType>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="MonoBehaviours\ConfigManager.cs.fuckthis" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.1">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="LethalCompany.GameLibs.Steam" Version="49.0.0-alpha.1" />
-	  <PackageReference Include="BepInEx.Analyzers" Version="1.*" PrivateAssets="all" />
-      <PackageReference Include="BepInEx.Core" Version="5.*" />
-      <PackageReference Include="BepInEx.PluginInfoProps" Version="2.*" />
-	  <!--<PackageReference Include="Evaisa.NetcodePatcher.MSBuild" Version="3.*" PrivateAssets="all" />-->
-    </ItemGroup>
-
-    <ItemGroup>
-      <Reference Include="LethalCompanyInputUtils">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\BepInEx\plugins\LethalCompanyInputUtils\LethalCompanyInputUtils.dll</HintPath>
-      </Reference>
-      <Reference Include="LethalLib">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\BepInEx\plugins\LethalLib\LethalLib.dll</HintPath>
-      </Reference>
-      <Reference Include="MMHOOK_Assembly-CSharp">
-        <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\BepInEx\plugins\MMHOOK\MMHOOK_Assembly-CSharp.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-	
-	<ItemGroup>
-	  <NetcodePatch Include="$(TargetPath)" />
-	</ItemGroup>
-	
-	<!--
-	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789.`))' == 'netstandard'">
-		<PackageReference Include="NETStandard.Library" Version="2.0.3" PrivateAssets="all" />
-	</ItemGroup>
-	-->
-
-    <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="copy &quot;$(TargetPath)&quot; &quot;O:\github\LCRuntimeInspector\UnityProject\Assets\Plugins&quot; /Y&#xD;&#xA;copy &quot;$(TargetDir)LCRuntimeInspector.pdb&quot; &quot;O:\github\LCRuntimeInspector\UnityProject\Assets\Plugins&quot; /Y&#xD;&#xA;copy &quot;$(TargetPath)&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\BepInEx\plugins\LCRuntimeInspector&quot; /Y&#xD;&#xA;copy &quot;$(TargetDir)LCRuntimeInspector.pdb&quot; &quot;C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\BepInEx\plugins\LCRuntimeInspector&quot; /Y" />
-    </Target>
-	
-	<Target Name="LogReferencedAssemblies" BeforeTargets="Build">
-	  <Message Importance="high" Text="Hello, world!" />
-	  <Message Importance="high" Text="@(ReferencePathWithRefAssemblies)" />
-	</Target>
+    <Copy 
+      Condition="Exists('$(UnityProjectAssetBundlePath)')"
+      SourceFiles="$(UnityProjectAssetBundlePath)" 
+      DestinationFolder="$(ProjectDir)assets/bundles/"
+      SkipUnchangedFiles="true"
+    />
+  </Target>
 </Project>
