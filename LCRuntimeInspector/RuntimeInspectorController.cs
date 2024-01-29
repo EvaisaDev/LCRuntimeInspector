@@ -10,7 +10,6 @@ namespace LCRuntimeInspector
 
         public void Awake()
         {
-            
             Plugin.Inputs.OpenHierarchy.performed += OpenHierarchy;
             Plugin.Inputs.OpenInspector.performed += OpenInspector;
             Plugin.Inputs.ToggleCursor.performed += ToggleCursor;
