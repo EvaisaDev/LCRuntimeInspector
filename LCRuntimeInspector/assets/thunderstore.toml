@@ -23,8 +23,8 @@ source = "../bin/Release/netstandard2.1/LCRuntimeInspector.dll"
 target = "BepInEx/plugins/Runtime_Inspector/"
 
 [[build.copy]]
-source = "bundles/*"
-target = "BepInEx/plugins/Runtime_Inspector/bundles/"
+source = "bundles"
+target = "BepInEx/plugins/Runtime_Inspector/bundles"
 
 
 [publish]
