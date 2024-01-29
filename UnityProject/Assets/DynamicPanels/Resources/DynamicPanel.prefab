@@ -324,6 +324,7 @@ GameObject:
   - component: {fileID: 225255291005751456}
   - component: {fileID: 114614089418798928}
   - component: {fileID: 114843194787698652}
+  - component: {fileID: 8133886461212577735}
   m_Layer: 5
   m_Name: DynamicPanel
   m_TagString: Untagged
@@ -426,3 +427,21 @@ MonoBehaviour:
   m_tabSelectedTextColor: {r: 0.83823526, g: 0.84439874, b: 0.84439874, a: 1}
   m_tabDetachingColor: {r: 0, g: 0.4855985, b: 0.5294118, a: 1}
   m_tabDetachingTextColor: {r: 0.83823526, g: 0.84439874, b: 0.84439874, a: 1}
+--- !u!114 &8133886461212577735
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726343141212444}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 809487501, guid: bd1a449bdc74e56479fa271b4c5f506d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  horizontalCursor: {fileID: 2800000, guid: a9c77eeb970c9ae40a370ca7060be120, type: 3}
+  verticalCursor: {fileID: 2800000, guid: 68ac78481f5b6df4da69a6f5133b6702, type: 3}
+  diagonalCursorTopLeft: {fileID: 2800000, guid: cbaa205f7a905b8429011ee0c50015ea,
+    type: 3}
+  diagonalCursorTopRight: {fileID: 2800000, guid: e5a757b3ef912a24c912a99d9e1befe5,
+    type: 3}
