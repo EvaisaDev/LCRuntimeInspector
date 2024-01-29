@@ -1,8 +1,8 @@
-# Lethal Company Runtime Inspector 
+# Lethal Company Runtime Inspector
 
 > Thunderstore ID `Evaisa-Runtime_Inspector`
 
-**This is [UnityRuntimeInspector](https://github.com/yasirkula/UnityRuntimeInspector) as a mod for LethalCompany.**
+**This is [UnityRuntimeInspector](https://github.com/yasirkula/UnityRuntimeInspector) as a mod for Lethal Company.**
 It also integrates [RuntimeMaterialInspector](https://thunderstore.io/package/Groove_Salad/RuntimeMaterialInspector/) by [Groove_Salad](https://thunderstore.io/package/Groove_Salad/)
 
 Currently Work In Progress.
