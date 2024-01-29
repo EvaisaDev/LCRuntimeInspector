@@ -94,6 +94,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <CopyToUnityRefAssemblyName Include="UniTask;UniTask.Addressables;UniTask.DOTween;UniTask.Linq;UniTask.TextMeshPro"/>
       <CopyToUnityRefAssemblyName Include="MMHOOK_Assembly-CSharp"/>
       <CopyToUnityRefAssemblyName Include="LethalCompanyInputUtils"/>
       <CopyToUnityRefAssemblyName Include="BepInEx"/>
