@@ -46,7 +46,7 @@ namespace LCRuntimeInspector
 
             Logger.LogInfo("LethalThings Runtime Inspector Loaded!");
 
-            bundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "runtimeinspector"));
+            bundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Info.Location)!, "bundles", "runtimeinspector"));
 
             tooltipAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/Tooltip.prefab");
             objectReferencePickerAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/ObjectReferencePicker.prefab");
