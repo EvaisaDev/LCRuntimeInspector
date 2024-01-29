@@ -6,4 +6,22 @@
       <BepInExPluginVersion>$(PlainVersion)</BepInExPluginVersion>
     </PropertyGroup>
   </Target>
+
+  <Target
+    Name="PackThunderstore"
+    DependsOnTargets="SetPluginVersion"
+    AfterTargets="PostBuildEvent"
+    Condition="$(Configuration) == 'Release' and $(IsThunderstorePackable) == 'true'"
+  >
+    <MakeDir Directories="$(ProjectDir)assets/bundles" Condition="!Exists('$(ProjectDir)assets/bundles')"/>
+    <Exec Command="dotnet tcli build --config-path $(ProjectDir)assets/thunderstore.toml --package-version $(PlainVersion)"/>
+    <ItemGroup>
+      <FilesToRename Include="$(ProjectDir)dist/*-$(PlainVersion).zip"/>
+    </ItemGroup>
+    <Move SourceFiles="@(FilesToRename)" DestinationFiles="@(FilesToRename -&gt; Replace($(PlainVersion), $(MinVerVersion)))"/>
+  </Target>
+
+  <Target Name="ThunderstorePublish" DependsOnTargets="SetPluginVersion" Condition="$(IsThunderstorePackable) == 'true'">
+    <Exec Command="dotnet tcli publish --config-path $(ProjectDir)assets/thunderstore.toml --file $(ProjectDir)dist/*-$(MinVerVersion).zip"/>
+  </Target>
 </Project>
