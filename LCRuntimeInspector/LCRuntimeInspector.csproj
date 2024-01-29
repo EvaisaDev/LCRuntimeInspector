@@ -86,6 +86,9 @@
     <Reference Include="Newtonsoft.Json">
       <HintPath>$(LethalCompanyDir)Lethal Company_Data/Managed/Newtonsoft.Json.dll</HintPath>
     </Reference>
+	 <Reference Include="UnityEditor">
+      <HintPath>$(ProjectDir)../lib/UnityEditor.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Target Name="CopyAssembliesToUnityProject" AfterTargets="PostBuildEvent" Condition="$(CI) != 'true'">
@@ -95,33 +98,33 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <CopyToUnityRefAssemblyName Include="MMHOOK_Assembly-CSharp"/>
-      <CopyToUnityRefAssemblyName Include="LethalCompanyInputUtils"/>
-      <CopyToUnityRefAssemblyName Include="BepInEx"/>
-      <CopyToUnityRefAssemblyName Include="BepInEx.Harmony"/>
-      <CopyToUnityRefAssemblyName Include="0Harmony"/>
-      <CopyToUnityRefAssemblyName Include="Mono.Cecil"/>
-      <CopyToUnityRefAssemblyName Include="Mono.Cecil.Rocks"/>
-      <CopyToUnityRefAssemblyName Include="MonoMod.Utils"/>
-      <CopyToUnityRefAssemblyName Include="MonoMod.RuntimeDetour"/>
-      <CopyToUnityRefAssemblyName Include="Assembly-CSharp-firstpass"/>
-      <CopyToUnityRefAssemblyName Include="AmazingAssets.TerrainToMesh"/>
-      <CopyToUnityRefAssemblyName Include="ClientNetworkTransform"/>
-      <CopyToUnityRefAssemblyName Include="DissonanceVoip"/>
-      <CopyToUnityRefAssemblyName Include="Facepunch Transport for Netcode for GameObjects"/>
-      <CopyToUnityRefAssemblyName Include="Facepunch.Steamworks.Win64"/>
-      <CopyToUnityRefAssemblyName Include="Newtonsoft.Json"/>
+      <CopyToUnityRefAssemblyName Include="MMHOOK_Assembly-CSharp" />
+      <CopyToUnityRefAssemblyName Include="LethalCompanyInputUtils" />
+      <CopyToUnityRefAssemblyName Include="BepInEx" />
+      <CopyToUnityRefAssemblyName Include="BepInEx.Harmony" />
+      <CopyToUnityRefAssemblyName Include="0Harmony" />
+      <CopyToUnityRefAssemblyName Include="Mono.Cecil" />
+      <CopyToUnityRefAssemblyName Include="Mono.Cecil.Rocks" />
+      <CopyToUnityRefAssemblyName Include="MonoMod.Utils" />
+      <CopyToUnityRefAssemblyName Include="MonoMod.RuntimeDetour" />
+      <CopyToUnityRefAssemblyName Include="Assembly-CSharp-firstpass" />
+      <CopyToUnityRefAssemblyName Include="AmazingAssets.TerrainToMesh" />
+      <CopyToUnityRefAssemblyName Include="ClientNetworkTransform" />
+      <CopyToUnityRefAssemblyName Include="DissonanceVoip" />
+      <CopyToUnityRefAssemblyName Include="Facepunch Transport for Netcode for GameObjects" />
+      <CopyToUnityRefAssemblyName Include="Facepunch.Steamworks.Win64" />
+      <CopyToUnityRefAssemblyName Include="Newtonsoft.Json" />
     </ItemGroup>
 
     <ItemGroup>
       <CopyToUnityRefAssemblyPath Include="@(ReferencePathWithRefAssemblies)">
         <CompareName>%(CopyToUnityRefAssemblyName.Identity)</CompareName>
       </CopyToUnityRefAssemblyPath>
-      <CopyToUnityRefAssemblyPath Remove="@(CopyToUnityRefAssemblyPath)" Condition="%(FileName) != %(CompareName)"/>
+      <CopyToUnityRefAssemblyPath Remove="@(CopyToUnityRefAssemblyPath)" Condition="%(FileName) != %(CompareName)" />
     </ItemGroup>
-
-    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(UnityProjectPluginsDir)" SkipUnchangedFiles="true"/>
-    <Copy SourceFiles="@(CopyToUnityRefAssemblyPath)" DestinationFolder="$(UnityProjectReferenceAssemblyDir)" SkipUnchangedFiles="true"/>
+    
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(UnityProjectPluginsDir)" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(CopyToUnityRefAssemblyPath)" DestinationFolder="$(UnityProjectReferenceAssemblyDir)" SkipUnchangedFiles="true" />
   </Target>
 
   <Target Name="CopyBundleFromUnityProject" BeforeTargets="PackThunderstore">

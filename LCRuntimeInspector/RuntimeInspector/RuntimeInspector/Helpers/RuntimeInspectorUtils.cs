@@ -1,4 +1,4 @@
-﻿#define EXCLUDE_BACKING_FIELDS_FROM_VARIABLES
+#define EXCLUDE_BACKING_FIELDS_FROM_VARIABLES
 
 #if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
 using UnityEngine.InputSystem;
@@ -675,7 +675,7 @@ namespace RuntimeInspectorNamespace
                 }
 			}
 
-			Plugin.logger.LogInfo( $"Found {result.Length} variables in {type.FullName}" );
+			//Plugin.logger.LogInfo( $"Found {result.Length} variables in {type.FullName}" );
 
             return result;
 		}

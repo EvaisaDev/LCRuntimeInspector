@@ -23,39 +23,88 @@ namespace LCRuntimeInspector
 
         public static PluginInfo pluginInfo;
 
-        internal static Inputs Inputs = new Inputs();
+        internal static Inputs Inputs;
+
 
         internal static AssetBundle bundle;
         internal static GameObject RuntimeInspectorPrefab;
+
+        // runtime inspector assets
         public static GameObject tooltipAsset;
         public static GameObject objectReferencePickerAsset;
         public static GameObject draggedReferenceItemAsset;
         public static GameObject colorPickerAsset;
+
+        // dynamic panel
+        public static GameObject dynamicPanel;
+        public static GameObject dynamicPanelPreview;
+        public static GameObject dynamicPanelTab;
 
         public Plugin()
         {
             ShaderInspector.PreInit();
         }
 
+        [RuntimeInitializeOnLoadMethodAttribute(RuntimeInitializeLoadType.BeforeSceneLoad)]
+        private static void Editor()
+        {
+            // if running in unity editor
+            if (Application.isEditor)
+            {
+                Debug.Log("LethalThings Runtime Inspector Loaded!");
+
+                ShaderInspector.PreInit();
+
+                // load assets from resources instead of bundle
+                RuntimeInspectorPrefab = Resources.Load<GameObject>("RuntimeInspectorPrefab");
+                tooltipAsset = Resources.Load<GameObject>("RuntimeInspector/Tooltip");
+                objectReferencePickerAsset = Resources.Load<GameObject>("RuntimeInspector/ObjectReferencePicker");
+                draggedReferenceItemAsset = Resources.Load<GameObject>("RuntimeInspector/DraggedReferenceItem");
+                colorPickerAsset = Resources.Load<GameObject>("RuntimeInspector/ColorPicker");
+
+                dynamicPanel = Resources.Load<GameObject>("DynamicPanel");
+                dynamicPanelPreview = Resources.Load<GameObject>("DynamicPanelPreview");
+                dynamicPanelTab = Resources.Load<GameObject>("DynamicPanelTab");
+
+                // print out the assets to see if they loaded correctly
+                Debug.Log("RuntimeInspectorPrefab: " + RuntimeInspectorPrefab);
+                Debug.Log("tooltipAsset: " + tooltipAsset);
+                Debug.Log("objectReferencePickerAsset: " + objectReferencePickerAsset);
+                Debug.Log("draggedReferenceItemAsset: " + draggedReferenceItemAsset);
+                Debug.Log("colorPickerAsset: " + colorPickerAsset);
+
+                Debug.Log("dynamicPanel: " + dynamicPanel);
+                Debug.Log("dynamicPanelPreview: " + dynamicPanelPreview);
+                Debug.Log("dynamicPanelTab: " + dynamicPanelTab);
+
+
+            }
+        }
+
         private void Awake()
         {
+            Inputs = new Inputs();
+
             logger = Logger;
             config = Config;
             pluginInfo = Info;
 
-
-            Logger.LogInfo("LethalThings Runtime Inspector Loaded!");
-
-            bundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Info.Location)!, "bundles", "runtimeinspector"));
+            bundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "bundles", "runtimeinspector"));
 
             tooltipAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/Tooltip.prefab");
             objectReferencePickerAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/ObjectReferencePicker.prefab");
             draggedReferenceItemAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/DraggedReferenceItem.prefab");
             colorPickerAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/ColorPicker.prefab");
 
-            ShaderInspector.Init();
+            dynamicPanel = bundle.LoadAsset<GameObject>("Assets/DynamicPanels/Resources/DynamicPanel.prefab");
+            dynamicPanelPreview = bundle.LoadAsset<GameObject>("Assets/DynamicPanels/Resources/DynamicPanelPreview.prefab");
+            dynamicPanelTab = bundle.LoadAsset<GameObject>("Assets/DynamicPanels/Resources/DynamicPanelTab.prefab");
 
-            RuntimeInspectorPrefab = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/RuntimeInspectorPrefab.prefab");
+            RuntimeInspectorPrefab = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspectorPrefab.prefab");
+
+            Logger.LogInfo("LethalThings Runtime Inspector Loaded!");
+
+            ShaderInspector.Init();
 
             var runtimeInspector = Instantiate(RuntimeInspectorPrefab);
             runtimeInspector.hideFlags = HideFlags.HideAndDontSave;
