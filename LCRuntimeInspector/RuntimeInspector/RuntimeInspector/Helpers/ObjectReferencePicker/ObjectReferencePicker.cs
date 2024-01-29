@@ -1,8 +1,8 @@
 ﻿using System;
-using UnityEngine;
-using Object = UnityEngine.Object;
-using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace RuntimeInspectorNamespace
 {

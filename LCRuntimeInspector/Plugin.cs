@@ -1,18 +1,10 @@
-﻿using BepInEx;
-using System.Security.Permissions;
-using BepInEx.Logging;
-using BepInEx.Configuration;
-using UnityEngine;
+﻿using System.IO;
 using System.Reflection;
-using System;
-using static UnityEngine.Rendering.HighDefinition.HDAdditionalCameraData;
-using System.IO;
-using RuntimeInspectorNamespace;
-using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
-using System.Collections.Generic;
-using UnityEngine.Rendering;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
+using System.Security.Permissions;
+using BepInEx;
+using BepInEx.Configuration;
+using BepInEx.Logging;
+using UnityEngine;
 
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace LCRuntimeInspector

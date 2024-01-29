@@ -1,23 +1,22 @@
 ﻿#define EXCLUDE_BACKING_FIELDS_FROM_VARIABLES
 
-using LCRuntimeInspector;
-using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
+#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
+using UnityEngine.InputSystem;
+using Pointer = UnityEngine.InputSystem.Pointer;
+#endif
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using LCRuntimeInspector;
+using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
-#if ENABLE_INPUT_SYSTEM && !ENABLE_LEGACY_INPUT_MANAGER
-using UnityEngine.InputSystem;
-using Pointer = UnityEngine.InputSystem.Pointer;
-#endif
 using Object = UnityEngine.Object;
 
 namespace RuntimeInspectorNamespace

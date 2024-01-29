@@ -1,11 +1,9 @@
-﻿using BepInEx;
+﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
 using BepInEx.Configuration;
 using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using MonoMod.RuntimeDetour;
-using System;
-using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
