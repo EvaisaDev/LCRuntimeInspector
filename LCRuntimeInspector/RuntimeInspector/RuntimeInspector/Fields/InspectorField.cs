@@ -1,6 +1,5 @@
 ﻿using LCRuntimeInspector;
 using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
-using NAudio.Wave;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
