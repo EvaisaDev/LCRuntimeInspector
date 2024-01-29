@@ -20,7 +20,7 @@ namespace LCRuntimeInspector
     [BepInPlugin(ModGUID, ModName, ModVersion)]
     [BepInDependency("com.rune580.LethalCompanyInputUtils", "0.6.1")]
     public class Plugin : BaseUnityPlugin
-    {   
+    {
         public const string ModGUID = "evaisa.runtimeinspector";
         public const string ModName = MyPluginInfo.PLUGIN_NAME;
         public const string ModVersion = MyPluginInfo.PLUGIN_VERSION;
