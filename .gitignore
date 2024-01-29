@@ -30,6 +30,9 @@
 ## GitHub specific
 !.github/
 
+## Libs
+!/lib/
+
 ## Solution
 !LCRuntimeInspector.sln
 
