@@ -46,6 +46,10 @@ LCRuntimeInspector/[Dd]ist
 !/UnityProject
 /UnityProject/*
 !/UnityProject/Assets
+/UnityProject/Assets/Plugins/*.dll
+/UnityProject/Assets/Plugins/ReferenceAssemblies/*.dll
+/UnityProject/Assets/Plugins/ReferenceAssemblies/*.meta
+/UnityProject/Assets/AssetBundles/*
 !/UnityProject/Packages
 !/UnityProject/ProjectSettings
 
