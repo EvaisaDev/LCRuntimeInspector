@@ -121,4 +121,16 @@
     <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(UnityProjectPluginsDir)" SkipUnchangedFiles="true"/>
     <Copy SourceFiles="@(CopyToUnityRefAssemblyPath)" DestinationFolder="$(UnityProjectReferenceAssemblyDir)" SkipUnchangedFiles="true"/>
   </Target>
+  
+  <Target Name="CopyBundleFromUnityProject" BeforeTargets="PackThunderstore">
+    <PropertyGroup>
+      <UnityProjectAssetBundlePath>$(ProjectDir)../UnityProject/Assets/AssetBundles/runtimeinspector</UnityProjectAssetBundlePath>
+    </PropertyGroup>
+    <Copy 
+      Condition="Exists('$(UnityProjectAssetBundlePath)')"
+      SourceFiles="$(UnityProjectAssetBundlePath)" 
+      DestinationFolder="$(ProjectDir)assets/bundles/"
+      SkipUnchangedFiles="true"
+    />
+  </Target>
 </Project>
