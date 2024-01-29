@@ -42,14 +42,15 @@ LCRuntimeInspector/[Bb]in
 LCRuntimeInspector/[Oo]bj
 LCRuntimeInspector/[Dd]ist
 
-# Explicit exceptions/ignores
-
-## Any `.user` (e.g. `.csproj.user`)
-**.user
-
 ### Unity Project
 !/UnityProject
 /UnityProject/*
 !/UnityProject/Assets
 !/UnityProject/Packages
 !/UnityProject/ProjectSettings
+
+# Explicit exceptions/ignores
+
+## Any `.user` (e.g. `.csproj.user`)
+**.user
+!**.template.*.user
