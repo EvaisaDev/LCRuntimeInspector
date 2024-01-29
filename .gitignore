@@ -53,6 +53,3 @@ LCRuntimeInspector/[Dd]ist
 !/UnityProject/Assets
 !/UnityProject/Packages
 !/UnityProject/ProjectSettings
-
-### Assemblies
-**.dll
