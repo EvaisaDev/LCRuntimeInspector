@@ -9,6 +9,7 @@
       https://nuget.bepinex.dev/v3/index.json;
     </RestoreAdditionalProjectSources>
     <IsThunderstorePackable>true</IsThunderstorePackable>
+	<DefineConstants>$(DefineConstants);UNITY_2017_2_OR_NEWER;UNITY_5_6_OR_NEWER;ENABLE_INPUT_SYSTEM;UNITY_STANDALONE;NET_STANDARD_2_0</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">

@@ -91,6 +91,14 @@ namespace LCRuntimeInspector
 
             bundle = AssetBundle.LoadFromFile(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "bundles", "runtimeinspector"));
 
+            // check if bundle is loaded
+            if (bundle == null)
+            {
+                Logger.LogInfo("Failed to load bundle!");
+                return;
+            }
+
+
             tooltipAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/Tooltip.prefab");
             objectReferencePickerAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/ObjectReferencePicker.prefab");
             draggedReferenceItemAsset = bundle.LoadAsset<GameObject>("Assets/RuntimeInspector/Resources/RuntimeInspector/DraggedReferenceItem.prefab");

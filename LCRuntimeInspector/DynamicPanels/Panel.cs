@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.UIElements;
+using Button = UnityEngine.UI.Button;
+using Image = UnityEngine.UI.Image;
 
 namespace DynamicPanels
 {
@@ -373,8 +376,11 @@ namespace DynamicPanels
 
 			AnchorZonesSetActive( false );
 
-			closeButton.onClick.AddListener( () => PanelNotificationCenter.Internal.PanelClosed( this ) );
-			closeButton.transform.SetAsLastSibling();
+            if (closeButton)
+            {
+                closeButton.onClick.AddListener(() => PanelNotificationCenter.Internal.PanelClosed(this));
+                closeButton.transform.SetAsLastSibling();
+            }
 
 #if UNITY_2018_1_OR_NEWER
 			// OnApplicationQuit isn't reliable on some Unity versions when Application.wantsToQuit is used; Application.quitting is the only reliable solution on those versions
