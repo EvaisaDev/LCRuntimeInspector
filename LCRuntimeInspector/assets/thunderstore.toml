@@ -13,6 +13,7 @@ BepInEx-BepInExPack = "5.4.2100"
 Rune580-LethalCompany_InputUtils = "0.6.1"
 Evaisa-FixPluginTypesSerialization = "1.1.1"
 Evaisa-HookGenPatcher = "0.0.5"
+Bobbie-UniTask = "2.5.0"
 
 [build]
 icon = "icons/icon.png"

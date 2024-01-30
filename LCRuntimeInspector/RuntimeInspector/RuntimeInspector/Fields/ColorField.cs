@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -32,9 +34,9 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Color ) || type == typeof( Color32 );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 			isColor32 = BoundVariableType == typeof( Color32 );
 		}
 
@@ -65,9 +67,9 @@ namespace RuntimeInspectorNamespace
 			colorPickerArea.anchorMin = rightSideAnchorMin;
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( isColor32 )
 				colorImg.color = (Color32) Value;

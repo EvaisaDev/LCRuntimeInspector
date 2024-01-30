@@ -9,7 +9,7 @@
       https://nuget.bepinex.dev/v3/index.json;
     </RestoreAdditionalProjectSources>
     <IsThunderstorePackable>true</IsThunderstorePackable>
-	<DefineConstants>$(DefineConstants);UNITY_2017_2_OR_NEWER;UNITY_5_6_OR_NEWER;ENABLE_INPUT_SYSTEM;UNITY_STANDALONE;NET_STANDARD_2_0</DefineConstants>
+	  <DefineConstants>$(DefineConstants);UNITY_2017_2_OR_NEWER;UNITY_5_6_OR_NEWER;ENABLE_INPUT_SYSTEM;UNITY_STANDALONE;NET_STANDARD_2_0</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
@@ -28,10 +28,9 @@
   <ItemGroup>
     <PackageReference Include="BepInEx.Core" Version="5.*" />
     <PackageReference Include="UnityEngine.Modules" Version="2022.3.9" />
-    <Reference Include="MMHOOK_Assembly-CSharp">
-      <HintPath>$(ProjectDir)../lib/MMHOOK_Assembly-CSharp.dll</HintPath>
-    </Reference>
   </ItemGroup>
+  <Import Project="$(ProjectDir)../lib/mmhook/import.props" />
+  <Import Project="$(ProjectDir)../lib/unitask/import.props" />
 
   <!-- Runtime dependencies (local) -->
   <ItemGroup Condition="$(CI) != 'true'">

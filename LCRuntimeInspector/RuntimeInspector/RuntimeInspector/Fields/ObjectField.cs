@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using LCRuntimeInspector;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -45,21 +47,21 @@ namespace RuntimeInspectorNamespace
 		public override void Initialize()
 		{
 			base.Initialize();
-			initializeObjectButton.onClick.AddListener( InitializeObject );
-		}
+            initializeObjectButton.onClick.AddListener(UniTask.UnityAction(async () => await InitializeObject()));
+        }
 
 		public override bool SupportsType( Type type )
 		{
 			return true;
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
 			elementsInitialized = false;
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 		}
 
-		protected override void GenerateElements()
+		protected override async UniTask GenerateElements(CancellationToken cancellationToken = default)
 		{
 			if( Value.IsNull() )
 			{
@@ -70,18 +72,18 @@ namespace RuntimeInspectorNamespace
 			initializeObjectButton.gameObject.SetActive( false );
 
 			if( ( customEditor = RuntimeInspectorUtils.GetCustomEditor( Value.GetType() ) ) != null )
-				customEditor.GenerateElements( this );
+				await customEditor.GenerateElements( this, cancellationToken );
 			else
-				CreateDrawersForVariables();
+				await CreateDrawersForVariables(cancellationToken);
 		}
 
-		protected override void ClearElements()
+		protected override async UniTask ClearElements(CancellationToken cancellationToken = default)
 		{
-			base.ClearElements();
+			await base.ClearElements(cancellationToken);
 
 			if( customEditor != null )
 			{
-				customEditor.Cleanup();
+				await customEditor.Cleanup(cancellationToken);
 				customEditor = null;
 			}
 		}
@@ -92,87 +94,37 @@ namespace RuntimeInspectorNamespace
 			initializeObjectButton.SetSkinButton( Skin );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( customEditor != null )
-				customEditor.Refresh();
+				await customEditor.Refresh(cancellationToken);
 		}
 
-		internal void CreateDrawersForVariablesInternal(params string[] variables)
-		{
-            if (variables == null || variables.Length == 0)
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                    CreateDrawerForVariable(variable);
-            }
-            else
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                {
-                    if (Array.IndexOf(variables, variable.Name) >= 0)
-                        CreateDrawerForVariable(variable);
-                }
-            }
+        protected async UniTask CreateDrawersForMembers(IEnumerable<MemberInfo> members, CancellationToken cancellationToken = default)
+        {
+            await UniTask.WhenAll(
+                members.Select(member => CreateDrawerForVariable(member, cancellationToken: cancellationToken))
+            );
         }
 
-
-        public void CreateDrawersForVariables( params string[] variables )
-		{
-            if (Value is Material item)
-            {
-                ShaderInspector.targetMats.Push(item);
-                try
-                {
-                    CreateDrawersForVariablesInternal(variables);
-                    return;
-                }
-                finally
-                {
-                    ShaderInspector.targetMats.Pop();
-                }
-            }
-			CreateDrawersForVariablesInternal(variables);
+        public async UniTask CreateDrawersForVariables(CancellationToken cancellationToken)
+        {
+            await CreateDrawersForMembers(ExposedVariablesForValueType, cancellationToken);
         }
 
-		internal void CreateDrawersForVariablesExcludingInternal(params string[] variablesToExclude)
-		{
-            if (variablesToExclude == null || variablesToExclude.Length == 0)
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                    CreateDrawerForVariable(variable);
-            }
-            else
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                {
-                    if (Array.IndexOf(variablesToExclude, variable.Name) < 0)
-                        CreateDrawerForVariable(variable);
-                }
-            }
+        public async UniTask CreateDrawersForVariables(MemberFilter filter, object filterCriteria, CancellationToken cancellationToken = default)
+        {
+            var members = ExposedVariablesForValueType.Where(FilterAcceptsMember);
+            await CreateDrawersForMembers(members, cancellationToken);
+
+            bool FilterAcceptsMember(MemberInfo member) => filter(member, filterCriteria);
         }
 
+        protected virtual IEnumerable<MemberInfo> ExposedVariablesForValueType => Inspector.GetExposedVariablesForType(Value.GetType());
 
-        public void CreateDrawersForVariablesExcluding( params string[] variablesToExclude )
-		{
-            if (Value is Material item)
-            {
-                ShaderInspector.targetMats.Push(item);
-                try
-                {
-                    CreateDrawersForVariablesExcludingInternal(variablesToExclude);
-                    return;
-                }
-                finally
-                {
-                    ShaderInspector.targetMats.Pop();
-                }
-            }
-            CreateDrawersForVariablesExcludingInternal(variablesToExclude);
-        }
-
-		private bool CanInitializeNewObject()
+        private bool CanInitializeNewObject()
 		{
 #if UNITY_EDITOR || !NETFX_CORE
 			if( BoundVariableType.IsAbstract || BoundVariableType.IsInterface )
@@ -200,13 +152,13 @@ namespace RuntimeInspectorNamespace
 			return true;
 		}
 
-		private void InitializeObject()
+		private async UniTask InitializeObject()
 		{
 			if( CanInitializeNewObject() )
 			{
 				Value = BoundVariableType.Instantiate();
 
-				RegenerateElements();
+				await RegenerateElements();
 				IsExpanded = true;
 			}
 		}

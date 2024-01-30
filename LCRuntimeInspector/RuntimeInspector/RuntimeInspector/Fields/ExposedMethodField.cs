@@ -1,4 +1,5 @@
 ﻿using System;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -21,8 +22,8 @@ namespace RuntimeInspectorNamespace
 		public override void Initialize()
 		{
 			base.Initialize();
-			invokeButton.onClick.AddListener( InvokeMethod );
-		}
+            invokeButton.onClick.AddListener(UniTask.UnityAction(async () => await InvokeMethodAsync()));
+        }
 
 		protected override void OnSkinChanged()
 		{
@@ -41,10 +42,10 @@ namespace RuntimeInspectorNamespace
 			NameRaw = boundMethod.Label;
 		}
 
-		public void InvokeMethod()
+		public async UniTask InvokeMethodAsync()
 		{
 			// Refresh value first
-			Refresh();
+			await Refresh();
 
 			if( boundMethod.IsInitializer )
 				Value = boundMethod.CallAndReturnValue( Value );

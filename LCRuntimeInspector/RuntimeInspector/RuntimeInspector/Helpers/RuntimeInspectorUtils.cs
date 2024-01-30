@@ -519,8 +519,8 @@ namespace RuntimeInspectorNamespace
 		}
 
 		public static MemberInfo[] GetAllVariables( this Type type )
-		{
-			MemberInfo[] result;
+        {
+            MemberInfo[] result;
 			if( typeToVariables.TryGetValue( type, out result ) )
 				goto returnResult;
 
@@ -661,22 +661,7 @@ namespace RuntimeInspectorNamespace
 			}
 
 			returnResult:
-
-            //Plugin.logger.LogInfo( $"Found {validVariablesList.Count} variables in {type.FullName}" );
-
-
-			if (typeof(Material).IsAssignableFrom(type))
-			{
-				Material material = ShaderInspector.targetMats.Peek();
-				if (material && material.shader)
-				{
-                    ShaderPropertyInfo[] shaderPropertyInfos = ShaderInspector.GetShaderPropertyInfos(material.shader);
-                    result = result.ToList().Concat(shaderPropertyInfos).ToArray();
-                }
-			}
-
-			//Plugin.logger.LogInfo( $"Found {result.Length} variables in {type.FullName}" );
-
+			Plugin.logger.LogInfo( $"Found {result.Length} variables in {type.FullName}" );
             return result;
 		}
 
