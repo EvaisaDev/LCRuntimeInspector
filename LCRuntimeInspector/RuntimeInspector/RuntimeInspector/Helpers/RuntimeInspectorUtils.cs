@@ -522,7 +522,7 @@ namespace RuntimeInspectorNamespace
         {
             MemberInfo[] result;
 			if( typeToVariables.TryGetValue( type, out result ) )
-				goto returnResult;
+				return result;
 
 			validVariablesList.Clear();
 			typesToSearchForVariablesList.Clear();
@@ -660,8 +660,6 @@ namespace RuntimeInspectorNamespace
 				typeToVariables[currType] = result;
 			}
 
-			returnResult:
-			Plugin.logger.LogInfo( $"Found {result.Length} variables in {type.FullName}" );
             return result;
 		}
 
