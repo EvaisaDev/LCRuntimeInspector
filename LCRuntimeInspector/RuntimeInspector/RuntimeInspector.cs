@@ -587,8 +587,6 @@ namespace RuntimeInspectorNamespace
                 .FirstOrDefault(drawer => drawer.CanBindTo(type, variable));
             if (compatibleDrawer is null) return null;
 
-            Plugin.logger.LogWarning($"Selected {compatibleDrawer} for type {type}, of {variableDrawers.Length} options");
-
             InspectorField drawer = InstantiateDrawer(compatibleDrawer, drawerParent);
             drawer.Inspector = this;
             drawer.Skin = Skin;
@@ -639,8 +637,6 @@ namespace RuntimeInspectorNamespace
 				InspectorField[] drawers = searchReferenceFields ? settings[i].ReferenceDrawers : settings[i].StandardDrawers;
 				for( int j = drawers.Length - 1; j >= 0; j-- ) {
                     if (!drawers[j].SupportsType(type)) continue;
-
-                    Plugin.logger.LogWarning($"found compatible field {drawers[j]} for type {type}");
 					eligibleDrawers.Add( drawers[j] );
 				}
 			}
