@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -70,17 +72,17 @@ namespace RuntimeInspectorNamespace
 #endif
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 			isArray = BoundVariableType.IsArray;
 			elementType = isArray ? BoundVariableType.GetElementType() : BoundVariableType.GetGenericArguments()[0];
 		}
 
-		protected override void OnUnbound()
+		protected override async UniTask OnUnbound(CancellationToken cancellationToken = default)
 		{
-			base.OnUnbound();
+			await base.OnUnbound(cancellationToken);
 
 			sizeInput.Text = "0";
 			elementsExpandedStates.Clear();
@@ -106,16 +108,16 @@ namespace RuntimeInspectorNamespace
 			sizeText.rectTransform.sizeDelta = new Vector2( -Skin.IndentAmount * ( Depth + 1 ), 0f );
 		}
 
-		protected override void ClearElements()
+		protected override async UniTask ClearElements(CancellationToken cancellationToken = default)
 		{
 			elementsExpandedStates.Clear();
 			for( int i = 0; i < elements.Count; i++ )
 				elementsExpandedStates.Add( ( elements[i] is ExpandableInspectorField ) ? ( (ExpandableInspectorField) elements[i] ).IsExpanded : false );
 
-			base.ClearElements();
+			await base.ClearElements(cancellationToken);
 		}
 
-		protected override void GenerateElements()
+		protected override async UniTask GenerateElements(CancellationToken cancellationToken = default)
 		{
 			if( Value == null )
 				return;
@@ -130,12 +132,12 @@ namespace RuntimeInspectorNamespace
 						break;
 
 					int j = i;
-					elementDrawer.BindTo( elementType, string.Empty, () => ( (Array) Value ).GetValue( j ), ( value ) =>
+					await elementDrawer.BindTo( elementType, string.Empty, () => ( (Array) Value ).GetValue( j ), ( value ) =>
 					{
 						Array _array = (Array) Value;
 						_array.SetValue( value, j );
 						Value = _array;
-					} );
+					}, cancellationToken: cancellationToken );
 
 					if( i < elementsExpandedStates.Count && elementsExpandedStates[i] && elementDrawer is ExpandableInspectorField )
 						( (ExpandableInspectorField) elementDrawer ).IsExpanded = true;
@@ -155,12 +157,12 @@ namespace RuntimeInspectorNamespace
 
 					int j = i;
 					string variableName = Inspector.ArrayIndicesStartAtOne ? ( ( i + 1 ) + ":" ) : ( i + ":" );
-					elementDrawer.BindTo( elementType, variableName, () => ( (IList) Value )[j], ( value ) =>
+					await elementDrawer.BindTo( elementType, variableName, () => ( (IList) Value )[j], ( value ) =>
 					{
 						IList _list = (IList) Value;
 						_list[j] = value;
 						Value = _list;
-					} );
+					}, cancellationToken: cancellationToken );
 
 					if( i < elementsExpandedStates.Count && elementsExpandedStates[i] && elementDrawer is ExpandableInspectorField )
 						( (ExpandableInspectorField) elementDrawer ).IsExpanded = true;

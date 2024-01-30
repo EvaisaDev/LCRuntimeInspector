@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using LCRuntimeInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.LowLevel;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -219,6 +224,8 @@ namespace RuntimeInspectorNamespace
 		private InspectorField currentDrawer = null;
 		private bool inspectLock = false;
 		private bool isDirty = false;
+        private CancellationTokenSource? _inspectCancellationTokenSource = null;
+        private CancellationTokenSource? _stopInspectCancellationTokenSource = null;
 
 		private object m_inspectedObject;
 		public object InspectedObject { get { return m_inspectedObject; } }
@@ -240,7 +247,7 @@ namespace RuntimeInspectorNamespace
 			set
 			{
 				m_componentFilter = value;
-				Refresh();
+				Refresh().Forget();
 			}
 		}
 
@@ -249,6 +256,14 @@ namespace RuntimeInspectorNamespace
 			base.Awake();
 			Initialize();
 		}
+
+        protected void Start()
+        {
+            if (!PlayerLoopHelper.IsInjectedUniTaskPlayerLoop()) {
+                var loop = PlayerLoop.GetCurrentPlayerLoop();
+                PlayerLoopHelper.Initialize(ref loop, InjectPlayerLoopTimings.Minimum);
+            }
+        }
 
 		private void Initialize()
 		{
@@ -353,8 +368,9 @@ namespace RuntimeInspectorNamespace
 				{
 					// Rebind to refresh the exposed variables in Inspector
 					object inspectedObject = m_inspectedObject;
-					StopInspectInternal();
-					InspectInternal( inspectedObject );
+                    StopInspectInternal()
+                        .ContinueWith(() => InspectInternal(inspectedObject))
+                        .Forget();
 
 					isDirty = false;
 					nextRefreshTime = time + m_refreshInterval;
@@ -364,22 +380,22 @@ namespace RuntimeInspectorNamespace
 					if( time > nextRefreshTime )
 					{
 						nextRefreshTime = time + m_refreshInterval;
-						Refresh();
+						Refresh().Forget();
 					}
 				}
 			}
 			else if( currentDrawer != null )
-				StopInspectInternal();
+				StopInspectInternal().Forget();
 		}
 
-		public void Refresh()
+		public async UniTask Refresh()
 		{
 			if( IsBound )
 			{
 				if( currentDrawer == null )
 					m_inspectedObject = null;
 				else
-					currentDrawer.Refresh();
+					await currentDrawer.Refresh();
 			}
 		}
 
@@ -387,14 +403,14 @@ namespace RuntimeInspectorNamespace
 		// when their values have changed. If a drawer is bound to a property whose setter
 		// may modify the input data (e.g. when input data is 20 but the setter clamps it to 10),
 		// the drawer's BoundInputFields will still show the unmodified input data (20) until the
-		// next Refresh. That is because BoundInputFields don't have access to the fields/properties 
+		// next Refresh. That is because BoundInputFields don't have access to the fields/properties
 		// they are modifying, there is no way for the BoundInputFields to know whether or not
 		// the property has modified the input data (changed it from 20 to 10).
-		// 
+		//
 		// Why not refresh only the changed InspectorDrawers? Because changing a property may affect
 		// multiple fields/properties that are bound to other drawers, we don't know which
 		// drawers may be affected. The safest way is to refresh all the drawers.
-		// 
+		//
 		// Why not Refresh? That's the hacky part: most drawers call this function in their
 		// BoundInputFields' OnValueSubmitted event. If Refresh was used, BoundInputField's
 		// "recentText = str;" line that is called after the OnValueSubmitted event would mess up
@@ -423,13 +439,32 @@ namespace RuntimeInspectorNamespace
 				currentDrawer.Skin = Skin;
 		}
 
-		public void Inspect( object obj )
-		{
-			if( !m_isLocked )
-				InspectInternal( obj );
-		}
+		public async UniTask Inspect( object obj )
+        {
+            if (m_isLocked) return;
 
-		internal void InspectInternal( object obj )
+            await InspectInternal(obj);
+        }
+
+        internal async UniTask InspectInternal(object obj)
+        {
+            if (_inspectCancellationTokenSource is { IsCancellationRequested: false, Token.CanBeCanceled: true })
+                _inspectCancellationTokenSource.Cancel();
+
+            var newCancellationTokenSource = new CancellationTokenSource();
+            _inspectCancellationTokenSource = newCancellationTokenSource;
+            try {
+                await InspectInternal(obj, newCancellationTokenSource.Token);
+            }
+            finally {
+                if (_inspectCancellationTokenSource == newCancellationTokenSource)
+                    _inspectCancellationTokenSource = null;
+
+                newCancellationTokenSource.Dispose();
+            }
+        }
+
+		internal async UniTask InspectInternal( object obj, CancellationToken cancellationToken )
 		{
 			if( inspectLock )
 				return;
@@ -443,7 +478,7 @@ namespace RuntimeInspectorNamespace
 			if( m_inspectedObject == obj )
 				return;
 
-			StopInspectInternal();
+			await StopInspectInternal(cancellationToken);
 
 			inspectLock = true;
 			try
@@ -474,9 +509,9 @@ namespace RuntimeInspectorNamespace
 				InspectorField inspectedObjectDrawer = CreateDrawerForType( obj.GetType(), drawArea, 0, false );
 				if( inspectedObjectDrawer != null )
 				{
-					inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value );
+					await inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value, cancellationToken: cancellationToken );
 					inspectedObjectDrawer.NameRaw = obj.GetNameWithType();
-					inspectedObjectDrawer.Refresh();
+					await inspectedObjectDrawer.Refresh(cancellationToken);
 
 					if( inspectedObjectDrawer is ExpandableInspectorField )
 						( (ExpandableInspectorField) inspectedObjectDrawer ).IsExpanded = true;
@@ -501,20 +536,38 @@ namespace RuntimeInspectorNamespace
 			}
 		}
 
-		public void StopInspect()
-		{
-			if( !m_isLocked )
-				StopInspectInternal();
+		public async UniTask StopInspect()
+        {
+            if (m_isLocked) return;
+			await StopInspectInternal();
 		}
 
-		internal void StopInspectInternal()
+        internal async UniTask StopInspectInternal()
+        {
+            if (_stopInspectCancellationTokenSource is { IsCancellationRequested: false, Token.CanBeCanceled: true })
+                _stopInspectCancellationTokenSource.Cancel();
+
+            var newCancellationTokenSource = new CancellationTokenSource();
+            _stopInspectCancellationTokenSource = newCancellationTokenSource;
+            try {
+                await StopInspectInternal(newCancellationTokenSource.Token);
+            }
+            finally {
+                if (_stopInspectCancellationTokenSource == newCancellationTokenSource)
+                    _stopInspectCancellationTokenSource = null;
+
+                newCancellationTokenSource.Dispose();
+            }
+        }
+
+		internal async UniTask StopInspectInternal(CancellationToken cancellationToken)
 		{
 			if( inspectLock )
 				return;
 
 			if( currentDrawer != null )
 			{
-				currentDrawer.Unbind();
+				await currentDrawer.Unbind(cancellationToken);
 				currentDrawer = null;
 			}
 
@@ -525,27 +578,22 @@ namespace RuntimeInspectorNamespace
 			ObjectReferencePicker.Instance.Close();
 		}
 
-		public InspectorField CreateDrawerForType( Type type, Transform drawerParent, int depth, bool drawObjectsAsFields = true, MemberInfo variable = null )
+		public InspectorField? CreateDrawerForType( Type type, Transform drawerParent, int depth, bool drawObjectsAsFields = true, MemberInfo variable = null )
 		{
 			InspectorField[] variableDrawers = GetDrawersForType( type, drawObjectsAsFields );
-			if( variableDrawers != null )
-			{
-				for( int i = 0; i < variableDrawers.Length; i++ )
-				{
-					if( variableDrawers[i].CanBindTo( type, variable ) )
-					{
-						InspectorField drawer = InstantiateDrawer( variableDrawers[i], drawerParent );
-						drawer.Inspector = this;
-						drawer.Skin = Skin;
-						drawer.Depth = depth;
+            if (variableDrawers is null or { Length: 0 }) return null;
 
-						return drawer;
-					}
-				}
-			}
+            var compatibleDrawer = variableDrawers
+                .FirstOrDefault(drawer => drawer.CanBindTo(type, variable));
+            if (compatibleDrawer is null) return null;
 
-			return null;
-		}
+            InspectorField drawer = InstantiateDrawer(compatibleDrawer, drawerParent);
+            drawer.Inspector = this;
+            drawer.Skin = Skin;
+            drawer.Depth = depth;
+
+            return drawer;
+        }
 
 		private InspectorField InstantiateDrawer( InspectorField drawer, Transform drawerParent )
 		{
@@ -587,10 +635,9 @@ namespace RuntimeInspectorNamespace
 			for( int i = settings.Length - 1; i >= 0; i-- )
 			{
 				InspectorField[] drawers = searchReferenceFields ? settings[i].ReferenceDrawers : settings[i].StandardDrawers;
-				for( int j = drawers.Length - 1; j >= 0; j-- )
-				{
-					if( drawers[j].SupportsType( type ) )
-						eligibleDrawers.Add( drawers[j] );
+				for( int j = drawers.Length - 1; j >= 0; j-- ) {
+                    if (!drawers[j].SupportsType(type)) continue;
+					eligibleDrawers.Add( drawers[j] );
 				}
 			}
 

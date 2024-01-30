@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -62,15 +64,15 @@ namespace RuntimeInspectorNamespace
 			if( Value != null && !Value.Equals( null ) )
 			{
 				if( Value is Component )
-					Inspector.InspectInternal( ( (Component) Value ).gameObject );
+					Inspector.InspectInternal( ( (Component) Value ).gameObject ).Forget();
 				else
-					Inspector.InspectInternal( Value );
+					Inspector.InspectInternal( Value ).Forget();
 			}
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 			OnReferenceChanged( (Object) Value );
 		}
 
@@ -120,10 +122,10 @@ namespace RuntimeInspectorNamespace
 			}
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 			object lastValue = Value;
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( lastValue != Value )
 				OnReferenceChanged( (Object) Value );

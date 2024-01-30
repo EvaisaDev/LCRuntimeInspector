@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace RuntimeInspectorNamespace
@@ -22,9 +24,9 @@ namespace RuntimeInspectorNamespace
 			return variable != null && variable.HasAttribute<RangeAttribute>();
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 			RangeAttribute rangeAttribute = variable.GetAttribute<RangeAttribute>();
 			slider.SetRange( Mathf.Max( rangeAttribute.min, numberHandler.MinValue ), Mathf.Min( rangeAttribute.max, numberHandler.MaxValue ) );
@@ -70,9 +72,9 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) input.transform ).anchorMin = new Vector2( 1f - inputFieldWidth, 0f );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 			slider.Value = numberHandler.ConvertToFloat( Value );
 		}
 	}

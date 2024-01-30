@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_standardDrawers:
   - {fileID: 114453255388587516, guid: b292c517aa17d35498474513ea51053b, type: 3}
+  - {fileID: 7200330574897591264, guid: 10b7efcad40c77c5585d402ec7920743, type: 3}
   - {fileID: 114003958484321768, guid: 97d2e6ff56f4e8148a2c0c88e8455e15, type: 3}
   - {fileID: 114836596486658644, guid: dc6c99ef010462949be7c6a4420501b2, type: 3}
   - {fileID: 114833464836618182, guid: 58feae853e7be46429c9eb218ce89d38, type: 3}

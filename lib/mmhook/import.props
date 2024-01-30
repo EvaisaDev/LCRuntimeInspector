@@ -1,0 +1,7 @@
+<Project>
+    <ItemGroup>
+      <Reference Include="MMHOOK_Assembly-CSharp">
+        <HintPath>$(ProjectDir)../lib/mmhook/MMHOOK_Assembly-CSharp.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+</Project>

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace RuntimeInspectorNamespace
@@ -24,11 +26,11 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Transform );
 		}
 
-		protected override void GenerateElements()
+		protected override async UniTask GenerateElements(CancellationToken cancellationToken = default)
 		{
-			CreateDrawerForVariable( positionProp, "Position" );
-			CreateDrawerForVariable( rotationProp, "Rotation" );
-			CreateDrawerForVariable( scaleProp, "Scale" );
+			await CreateDrawerForVariable( positionProp, "Position", cancellationToken );
+			await CreateDrawerForVariable( rotationProp, "Rotation", cancellationToken );
+			await CreateDrawerForVariable( scaleProp, "Scale", cancellationToken );
 		}
 	}
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,9 +39,9 @@ namespace RuntimeInspectorNamespace
 			return supportedTypes.Contains( type );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 			if( BoundVariableType == typeof( float ) || BoundVariableType == typeof( double ) || BoundVariableType == typeof( decimal ) )
 				input.BackingField.contentType = InputField.ContentType.DecimalNumber;
@@ -78,10 +80,10 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) input.transform ).anchorMin = rightSideAnchorMin;
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 			object prevVal = Value;
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( !numberHandler.ValuesAreEqual( Value, prevVal ) )
 				input.Text = numberHandler.ToString( Value );

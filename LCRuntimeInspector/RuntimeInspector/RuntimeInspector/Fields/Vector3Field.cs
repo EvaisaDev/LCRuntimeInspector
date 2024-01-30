@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -62,9 +64,9 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Vector3 );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 #if UNITY_2017_2_OR_NEWER
 			isVector3Int = BoundVariableType == typeof( Vector3Int );
@@ -160,13 +162,13 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) inputZ.transform ).SetAnchorMinMaxInputField( labelZ.rectTransform, rightSideAnchorMin, rightSideAnchorMax );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 #if UNITY_2017_2_OR_NEWER
 			if( isVector3Int )
 			{
 				Vector3Int prevVal = (Vector3Int) Value;
-				base.Refresh();
+				await base.Refresh(cancellationToken);
 				Vector3Int val = (Vector3Int) Value;
 
 				if( val.x != prevVal.x )
@@ -180,7 +182,7 @@ namespace RuntimeInspectorNamespace
 #endif
 			{
 				Vector3 prevVal = (Vector3) Value;
-				base.Refresh();
+				await base.Refresh(cancellationToken);
 				Vector3 val = (Vector3) Value;
 
 				if( val.x != prevVal.x )

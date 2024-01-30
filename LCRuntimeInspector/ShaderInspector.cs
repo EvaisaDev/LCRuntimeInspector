@@ -26,6 +26,7 @@ namespace LCRuntimeInspector
 
         public static ShaderPropertyInfo[] GetShaderPropertyInfos(Shader shader)
         {
+            if (shader is null) return Array.Empty<ShaderPropertyInfo>();
             if (shaderPropertiesCache.TryGetValue(shader, out var value))
             {
                 return value;

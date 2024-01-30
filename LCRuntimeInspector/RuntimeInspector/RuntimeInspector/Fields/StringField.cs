@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -43,9 +45,9 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( string );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 			int prevLineCount = lineCount;
 			if( variable == null )
@@ -70,9 +72,9 @@ namespace RuntimeInspectorNamespace
 			}
 		}
 
-		protected override void OnUnbound()
+		protected override async UniTask OnUnbound(CancellationToken cancellationToken = default)
 		{
-			base.OnUnbound();
+			await base.OnUnbound(cancellationToken);
 			SetterMode = Mode.OnValueChange;
 		}
 
@@ -103,9 +105,9 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) input.transform ).anchorMin = rightSideAnchorMin;
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( Value == null )
 				input.Text = string.Empty;

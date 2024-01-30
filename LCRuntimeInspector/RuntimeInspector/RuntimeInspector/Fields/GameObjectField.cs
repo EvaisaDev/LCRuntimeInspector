@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -61,21 +63,21 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( GameObject );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound(MemberInfo variable, CancellationToken cancellationToken = default)
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 			currentTag = ( (GameObject) Value ).tag;
 		}
 
-		protected override void OnUnbound()
+		protected override async UniTask OnUnbound(CancellationToken cancellationToken = default)
 		{
-			base.OnUnbound();
+			await base.OnUnbound(cancellationToken);
 
 			components.Clear();
 			componentsExpandedStates.Clear();
 		}
 
-		protected override void ClearElements()
+		protected override async UniTask ClearElements(CancellationToken cancellationToken = default)
 		{
 			componentsExpandedStates.Clear();
 			for( int i = 0; i < elements.Count; i++ )
@@ -85,22 +87,22 @@ namespace RuntimeInspectorNamespace
 					componentsExpandedStates.Add( ( (ExpandableInspectorField) elements[i] ).IsExpanded );
 			}
 
-			base.ClearElements();
+			await base.ClearElements(cancellationToken);
 		}
 
-		protected override void GenerateElements()
+		protected override async UniTask GenerateElements(CancellationToken cancellationToken = default)
 		{
 			if( components.Count == 0 )
 				return;
 
-			CreateDrawer( typeof( bool ), "Is Active", isActiveGetter, isActiveSetter );
-			StringField nameField = CreateDrawer( typeof( string ), "Name", nameGetter, nameSetter ) as StringField;
-			StringField tagField = CreateDrawer( typeof( string ), "Tag", tagGetter, tagSetter ) as StringField;
-			CreateDrawerForVariable( layerProp, "Layer" );
+			await CreateDrawer( typeof( bool ), "Is Active", isActiveGetter, isActiveSetter, cancellationToken: cancellationToken );
+			StringField nameField = await CreateDrawer( typeof( string ), "Name", nameGetter, nameSetter, cancellationToken: cancellationToken ) as StringField;
+			StringField tagField = await CreateDrawer( typeof( string ), "Tag", tagGetter, tagSetter, cancellationToken: cancellationToken ) as StringField;
+			await CreateDrawerForVariable( layerProp, "Layer", cancellationToken );
 
 			for( int i = 0, j = 0; i < components.Count; i++ )
 			{
-				InspectorField componentDrawer = CreateDrawerForComponent( components[i] );
+				InspectorField componentDrawer = await CreateDrawerForComponent( components[i], cancellationToken: cancellationToken );
 				if( componentDrawer as ExpandableInspectorField && j < componentsExpandedStates.Count && componentsExpandedStates[j++] )
 					( (ExpandableInspectorField) componentDrawer ).IsExpanded = true;
 			}
@@ -112,12 +114,12 @@ namespace RuntimeInspectorNamespace
 				tagField.SetterMode = StringField.Mode.OnSubmit;
 
 			if( Inspector.ShowAddComponentButton )
-				CreateExposedMethodButton( addComponentMethod, () => this, ( value ) => { } );
+				await CreateExposedMethodButton( addComponentMethod, () => this, ( value ) => { }, cancellationToken );
 
 			componentsExpandedStates.Clear();
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 			// Refresh components
 			components.Clear();
@@ -137,7 +139,7 @@ namespace RuntimeInspectorNamespace
 			}
 
 			// Regenerate components' drawers, if necessary
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 		}
 
 		[UnityEngine.Scripting.Preserve] // This method is bound to addComponentMethod
@@ -155,7 +157,7 @@ namespace RuntimeInspectorNamespace
 				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 #else
 				// Common Unity assemblies
-				IEnumerable<Assembly> assemblies = new HashSet<Assembly> 
+				IEnumerable<Assembly> assemblies = new HashSet<Assembly>
 				{
 					typeof( Transform ).Assembly,
 					typeof( RectTransform ).Assembly,
@@ -207,7 +209,7 @@ namespace RuntimeInspectorNamespace
 					if( type != null && target && Inspector && ( Inspector.InspectedObject as GameObject ) == target )
 					{
 						target.AddComponent( (Type) type );
-						Inspector.Refresh();
+						Inspector.Refresh().Forget();
 					}
 				},
 				( type ) => ( (Type) type ).FullName,
@@ -223,17 +225,17 @@ namespace RuntimeInspectorNamespace
 
 			Component component = componentDrawer.Value as Component;
 			if( component && !( component is Transform ) )
-				componentDrawer.StartCoroutine( RemoveComponentCoroutine( component, componentDrawer.Inspector ) );
+				RemoveComponentAsync( component, componentDrawer.Inspector ).Forget();
 		}
 
-		private static IEnumerator RemoveComponentCoroutine( Component component, RuntimeInspector inspector )
+		private static async UniTask RemoveComponentAsync( Component component, RuntimeInspector inspector )
 		{
 			Destroy( component );
 
 			// Destroy operation doesn't take place immediately, wait for the component to be fully destroyed
-			yield return null;
+            await UniTask.NextFrame();
 
-			inspector.Refresh();
+			await inspector.Refresh();
 			inspector.EnsureScrollViewIsWithinBounds(); // Scroll view's contents can get out of bounds after removing a component
 		}
 	}
