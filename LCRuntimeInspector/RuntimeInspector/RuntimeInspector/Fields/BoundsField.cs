@@ -46,21 +46,21 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Bounds );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 #if UNITY_2017_2_OR_NEWER
 			if( BoundVariableType == typeof( BoundsInt ) )
 			{
-				inputCenter.BindTo( this, intCenterVariable, "Center:" );
-				inputExtents.BindTo( this, intSizeVariable, "Size:" );
+				await inputCenter.BindTo( this, intCenterVariable, "Center:", cancellationToken );
+				await inputExtents.BindTo( this, intSizeVariable, "Size:", cancellationToken );
 			}
 			else
 #endif
 			{
-				inputCenter.BindTo( this, centerVariable, "Center:" );
-				inputExtents.BindTo( this, extentsVariable, "Extents:" );
+				await inputCenter.BindTo( this, centerVariable, "Center:", cancellationToken );
+				await inputExtents.BindTo( this, extentsVariable, "Extents:", cancellationToken );
 			}
 		}
 

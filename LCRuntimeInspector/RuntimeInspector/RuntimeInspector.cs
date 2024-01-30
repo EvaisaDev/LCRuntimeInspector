@@ -221,7 +221,8 @@ namespace RuntimeInspectorNamespace
 		private InspectorField currentDrawer = null;
 		private bool inspectLock = false;
 		private bool isDirty = false;
-        private CancellationTokenSource? inspectCancellationTokenSource = null;
+        private CancellationTokenSource? _inspectCancellationTokenSource = null;
+        private CancellationTokenSource? _stopInspectCancellationTokenSource = null;
 
 		private object m_inspectedObject;
 		public object InspectedObject { get { return m_inspectedObject; } }
@@ -356,8 +357,9 @@ namespace RuntimeInspectorNamespace
 				{
 					// Rebind to refresh the exposed variables in Inspector
 					object inspectedObject = m_inspectedObject;
-					StopInspectInternal();
-					InspectInternal( inspectedObject ).Forget();
+                    StopInspectInternal()
+                        .ContinueWith(() => InspectInternal(inspectedObject))
+                        .Forget();
 
 					isDirty = false;
 					nextRefreshTime = time + m_refreshInterval;
@@ -372,7 +374,7 @@ namespace RuntimeInspectorNamespace
 				}
 			}
 			else if( currentDrawer != null )
-				StopInspectInternal();
+				StopInspectInternal().Forget();
 		}
 
 		public async UniTask Refresh()
@@ -435,17 +437,17 @@ namespace RuntimeInspectorNamespace
 
         internal async UniTask InspectInternal(object obj)
         {
-            if (inspectCancellationTokenSource is { IsCancellationRequested: false })
-                inspectCancellationTokenSource.Cancel();
+            if (_inspectCancellationTokenSource is { IsCancellationRequested: false, Token.CanBeCanceled: true })
+                _inspectCancellationTokenSource.Cancel();
 
             var newCancellationTokenSource = new CancellationTokenSource();
-            inspectCancellationTokenSource = newCancellationTokenSource;
+            _inspectCancellationTokenSource = newCancellationTokenSource;
             try {
                 await InspectInternal(obj, newCancellationTokenSource.Token);
             }
             finally {
-                if (inspectCancellationTokenSource == newCancellationTokenSource)
-                    inspectCancellationTokenSource = null;
+                if (_inspectCancellationTokenSource == newCancellationTokenSource)
+                    _inspectCancellationTokenSource = null;
 
                 newCancellationTokenSource.Dispose();
             }
@@ -465,7 +467,7 @@ namespace RuntimeInspectorNamespace
 			if( m_inspectedObject == obj )
 				return;
 
-			StopInspectInternal();
+			await StopInspectInternal(cancellationToken);
 
 			inspectLock = true;
 			try
@@ -496,7 +498,7 @@ namespace RuntimeInspectorNamespace
 				InspectorField inspectedObjectDrawer = CreateDrawerForType( obj.GetType(), drawArea, 0, false );
 				if( inspectedObjectDrawer != null )
 				{
-					inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value );
+					await inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value );
 					inspectedObjectDrawer.NameRaw = obj.GetNameWithType();
 					await inspectedObjectDrawer.Refresh(cancellationToken);
 
@@ -523,20 +525,38 @@ namespace RuntimeInspectorNamespace
 			}
 		}
 
-		public void StopInspect()
-		{
-			if( !m_isLocked )
-				StopInspectInternal();
+		public async UniTask StopInspect()
+        {
+            if (m_isLocked) return;
+			await StopInspectInternal();
 		}
 
-		internal void StopInspectInternal()
+        internal async UniTask StopInspectInternal()
+        {
+            if (_stopInspectCancellationTokenSource is { IsCancellationRequested: false, Token.CanBeCanceled: true })
+                _stopInspectCancellationTokenSource.Cancel();
+
+            var newCancellationTokenSource = new CancellationTokenSource();
+            _stopInspectCancellationTokenSource = newCancellationTokenSource;
+            try {
+                await StopInspectInternal(newCancellationTokenSource.Token);
+            }
+            finally {
+                if (_stopInspectCancellationTokenSource == newCancellationTokenSource)
+                    _stopInspectCancellationTokenSource = null;
+
+                newCancellationTokenSource.Dispose();
+            }
+        }
+
+		internal async UniTask StopInspectInternal(CancellationToken cancellationToken)
 		{
 			if( inspectLock )
 				return;
 
 			if( currentDrawer != null )
 			{
-				currentDrawer.Unbind();
+				await currentDrawer.Unbind(cancellationToken);
 				currentDrawer = null;
 			}
 

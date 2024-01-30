@@ -34,9 +34,9 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Color ) || type == typeof( Color32 );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 			isColor32 = BoundVariableType == typeof( Color32 );
 		}
 

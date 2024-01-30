@@ -63,21 +63,21 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( GameObject );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound(MemberInfo variable, CancellationToken cancellationToken = default)
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 			currentTag = ( (GameObject) Value ).tag;
 		}
 
-		protected override void OnUnbound()
+		protected override async UniTask OnUnbound(CancellationToken cancellationToken = default)
 		{
-			base.OnUnbound();
+			await base.OnUnbound(cancellationToken);
 
 			components.Clear();
 			componentsExpandedStates.Clear();
 		}
 
-		protected override void ClearElements()
+		protected override async UniTask ClearElements(CancellationToken cancellationToken = default)
 		{
 			componentsExpandedStates.Clear();
 			for( int i = 0; i < elements.Count; i++ )
@@ -87,22 +87,22 @@ namespace RuntimeInspectorNamespace
 					componentsExpandedStates.Add( ( (ExpandableInspectorField) elements[i] ).IsExpanded );
 			}
 
-			base.ClearElements();
+			await base.ClearElements(cancellationToken);
 		}
 
-		protected override void GenerateElements()
+		protected override async UniTask GenerateElements(CancellationToken cancellationToken = default)
 		{
 			if( components.Count == 0 )
 				return;
 
-			CreateDrawer( typeof( bool ), "Is Active", isActiveGetter, isActiveSetter );
-			StringField nameField = CreateDrawer( typeof( string ), "Name", nameGetter, nameSetter ) as StringField;
-			StringField tagField = CreateDrawer( typeof( string ), "Tag", tagGetter, tagSetter ) as StringField;
-			CreateDrawerForVariable( layerProp, "Layer" );
+			await CreateDrawer( typeof( bool ), "Is Active", isActiveGetter, isActiveSetter, cancellationToken: cancellationToken );
+			StringField nameField = await CreateDrawer( typeof( string ), "Name", nameGetter, nameSetter, cancellationToken: cancellationToken ) as StringField;
+			StringField tagField = await CreateDrawer( typeof( string ), "Tag", tagGetter, tagSetter, cancellationToken: cancellationToken ) as StringField;
+			await CreateDrawerForVariable( layerProp, "Layer", cancellationToken );
 
 			for( int i = 0, j = 0; i < components.Count; i++ )
 			{
-				InspectorField componentDrawer = CreateDrawerForComponent( components[i] );
+				InspectorField componentDrawer = await CreateDrawerForComponent( components[i], cancellationToken: cancellationToken );
 				if( componentDrawer as ExpandableInspectorField && j < componentsExpandedStates.Count && componentsExpandedStates[j++] )
 					( (ExpandableInspectorField) componentDrawer ).IsExpanded = true;
 			}
@@ -114,7 +114,7 @@ namespace RuntimeInspectorNamespace
 				tagField.SetterMode = StringField.Mode.OnSubmit;
 
 			if( Inspector.ShowAddComponentButton )
-				CreateExposedMethodButton( addComponentMethod, () => this, ( value ) => { } );
+				await CreateExposedMethodButton( addComponentMethod, () => this, ( value ) => { }, cancellationToken );
 
 			componentsExpandedStates.Clear();
 		}

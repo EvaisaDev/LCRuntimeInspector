@@ -47,21 +47,21 @@ namespace RuntimeInspectorNamespace
 		public override void Initialize()
 		{
 			base.Initialize();
-			initializeObjectButton.onClick.AddListener( InitializeObject );
-		}
+            initializeObjectButton.onClick.AddListener(UniTask.UnityAction(async () => await InitializeObject()));
+        }
 
 		public override bool SupportsType( Type type )
 		{
 			return true;
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
 			elementsInitialized = false;
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 		}
 
-		protected override void GenerateElements()
+		protected override async UniTask GenerateElements(CancellationToken cancellationToken = default)
 		{
 			if( Value.IsNull() )
 			{
@@ -72,18 +72,18 @@ namespace RuntimeInspectorNamespace
 			initializeObjectButton.gameObject.SetActive( false );
 
 			if( ( customEditor = RuntimeInspectorUtils.GetCustomEditor( Value.GetType() ) ) != null )
-				customEditor.GenerateElements( this );
+				await customEditor.GenerateElements( this, cancellationToken );
 			else
-				CreateDrawersForVariables();
+				await CreateDrawersForVariables(Array.Empty<string>(), cancellationToken: cancellationToken);
 		}
 
-		protected override void ClearElements()
+		protected override async UniTask ClearElements(CancellationToken cancellationToken = default)
 		{
-			base.ClearElements();
+			await base.ClearElements(cancellationToken);
 
 			if( customEditor != null )
 			{
-				customEditor.Cleanup();
+				await customEditor.Cleanup(cancellationToken);
 				customEditor = null;
 			}
 		}
@@ -102,32 +102,32 @@ namespace RuntimeInspectorNamespace
 				await customEditor.Refresh(cancellationToken);
 		}
 
-		internal void CreateDrawersForVariablesInternal(params string[] variables)
+		internal async UniTask CreateDrawersForVariablesInternal(string[] variables, CancellationToken cancellationToken = default)
 		{
             if (variables == null || variables.Length == 0)
             {
                 foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                    CreateDrawerForVariable(variable);
+                    await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
             }
             else
             {
                 foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
                 {
                     if (Array.IndexOf(variables, variable.Name) >= 0)
-                        CreateDrawerForVariable(variable);
+                        await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
                 }
             }
         }
 
 
-        public void CreateDrawersForVariables( params string[] variables )
+        public async UniTask CreateDrawersForVariables(string[] variables, CancellationToken cancellationToken = default)
 		{
             if (Value is Material item)
             {
                 ShaderInspector.targetMats.Push(item);
                 try
                 {
-                    CreateDrawersForVariablesInternal(variables);
+                    await CreateDrawersForVariablesInternal(variables, cancellationToken: cancellationToken);
                     return;
                 }
                 finally
@@ -135,35 +135,35 @@ namespace RuntimeInspectorNamespace
                     ShaderInspector.targetMats.Pop();
                 }
             }
-			CreateDrawersForVariablesInternal(variables);
+			await CreateDrawersForVariablesInternal(variables, cancellationToken: cancellationToken);
         }
 
-		internal void CreateDrawersForVariablesExcludingInternal(params string[] variablesToExclude)
+		internal async UniTask CreateDrawersForVariablesExcludingInternal(string[] variablesToExclude, CancellationToken cancellationToken = default)
 		{
             if (variablesToExclude == null || variablesToExclude.Length == 0)
             {
                 foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                    CreateDrawerForVariable(variable);
+                    await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
             }
             else
             {
                 foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
                 {
                     if (Array.IndexOf(variablesToExclude, variable.Name) < 0)
-                        CreateDrawerForVariable(variable);
+                        await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
                 }
             }
         }
 
 
-        public void CreateDrawersForVariablesExcluding( params string[] variablesToExclude )
+        public async UniTask CreateDrawersForVariablesExcluding(string[] variablesToExclude, CancellationToken cancellationToken = default)
 		{
             if (Value is Material item)
             {
                 ShaderInspector.targetMats.Push(item);
                 try
                 {
-                    CreateDrawersForVariablesExcludingInternal(variablesToExclude);
+                    await CreateDrawersForVariablesExcludingInternal(variablesToExclude, cancellationToken);
                     return;
                 }
                 finally
@@ -171,7 +171,7 @@ namespace RuntimeInspectorNamespace
                     ShaderInspector.targetMats.Pop();
                 }
             }
-            CreateDrawersForVariablesExcludingInternal(variablesToExclude);
+            await CreateDrawersForVariablesExcludingInternal(variablesToExclude, cancellationToken);
         }
 
 		private bool CanInitializeNewObject()
@@ -202,13 +202,13 @@ namespace RuntimeInspectorNamespace
 			return true;
 		}
 
-		private void InitializeObject()
+		private async UniTask InitializeObject()
 		{
 			if( CanInitializeNewObject() )
 			{
 				Value = BoundVariableType.Instantiate();
 
-				RegenerateElements();
+				await RegenerateElements();
 				IsExpanded = true;
 			}
 		}

@@ -70,9 +70,9 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Vector4 ) || type == typeof( Quaternion );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 			isQuaternion = BoundVariableType == typeof( Quaternion );
 			if( isQuaternion )

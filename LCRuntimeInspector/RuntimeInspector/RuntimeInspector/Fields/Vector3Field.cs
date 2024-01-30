@@ -64,9 +64,9 @@ namespace RuntimeInspectorNamespace
 			return type == typeof( Vector3 );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 #if UNITY_2017_2_OR_NEWER
 			isVector3Int = BoundVariableType == typeof( Vector3Int );

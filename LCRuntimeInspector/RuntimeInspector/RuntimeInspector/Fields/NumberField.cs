@@ -39,9 +39,9 @@ namespace RuntimeInspectorNamespace
 			return supportedTypes.Contains( type );
 		}
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-			base.OnBound( variable );
+			await base.OnBound( variable, cancellationToken );
 
 			if( BoundVariableType == typeof( float ) || BoundVariableType == typeof( double ) || BoundVariableType == typeof( decimal ) )
 				input.BackingField.contentType = InputField.ContentType.DecimalNumber;

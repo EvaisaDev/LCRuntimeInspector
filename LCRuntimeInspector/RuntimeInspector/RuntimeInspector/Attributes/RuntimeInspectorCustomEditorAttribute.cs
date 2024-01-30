@@ -36,8 +36,8 @@ namespace RuntimeInspectorNamespace
 
 	public interface IRuntimeInspectorCustomEditor
 	{
-		void GenerateElements( ObjectField parent );
+		UniTask GenerateElements( ObjectField parent, CancellationToken cancellationToken );
 		UniTask Refresh(CancellationToken cancellationToken);
-		void Cleanup();
+        UniTask Cleanup(CancellationToken cancellationToken);
 	}
 }

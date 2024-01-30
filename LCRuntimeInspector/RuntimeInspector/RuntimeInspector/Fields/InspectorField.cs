@@ -128,12 +128,12 @@ namespace RuntimeInspectorNamespace
 			return true;
 		}
 
-		public void BindTo( InspectorField parent, MemberInfo variable, string variableName = null )
+		public async UniTask BindTo( InspectorField parent, MemberInfo variable, string variableName = null, CancellationToken cancellationToken = default )
 		{
             if (variable is ShaderPropertyInfo shaderPropertyInfo && typeof(Material).IsAssignableFrom(parent.BoundVariableType))
             {
                 string text = variableName ?? string.Format(ShaderInspector.nameFormat.Value, shaderPropertyInfo.description, shaderPropertyInfo.name);
-                BindTo(shaderPropertyInfo.GetPropertyType(), text, shaderPropertyInfo.GetGetter(parent), shaderPropertyInfo.GetSetter(parent), variable);
+                await BindTo(shaderPropertyInfo.GetPropertyType(), text, shaderPropertyInfo.GetGetter(parent), shaderPropertyInfo.GetSetter(parent), variable, cancellationToken);
                 if (variableNameText)
                 {
                     variableNameText.text = text;
@@ -152,13 +152,13 @@ namespace RuntimeInspectorNamespace
 #else
 				if( !parent.BoundVariableType.GetTypeInfo().IsValueType )
 #endif
-					BindTo( field.FieldType, variableName, () => field.GetValue( parent.Value ), ( value ) => field.SetValue( parent.Value, value ), variable );
+                    await BindTo( field.FieldType, variableName, () => field.GetValue( parent.Value ), ( value ) => field.SetValue( parent.Value, value ), variable, cancellationToken );
 				else
-					BindTo( field.FieldType, variableName, () => field.GetValue( parent.Value ), ( value ) =>
+                    await BindTo( field.FieldType, variableName, () => field.GetValue( parent.Value ), ( value ) =>
 					{
 						field.SetValue( parent.Value, value );
 						parent.Value = parent.Value;
-					}, variable );
+					}, variable, cancellationToken );
 			}
 			else if( variable is PropertyInfo )
 			{
@@ -171,20 +171,20 @@ namespace RuntimeInspectorNamespace
 #else
 				if( !parent.BoundVariableType.GetTypeInfo().IsValueType )
 #endif
-					BindTo( property.PropertyType, variableName, () => property.GetValue( parent.Value, null ), ( value ) => property.SetValue( parent.Value, value, null ), variable );
+					await BindTo( property.PropertyType, variableName, () => property.GetValue( parent.Value, null ), ( value ) => property.SetValue( parent.Value, value, null ), variable, cancellationToken );
 				else
-					BindTo( property.PropertyType, variableName, () => property.GetValue( parent.Value, null ), ( value ) =>
+					await BindTo( property.PropertyType, variableName, () => property.GetValue( parent.Value, null ), ( value ) =>
 					{
 						property.SetValue( parent.Value, value, null );
 						parent.Value = parent.Value;
-					}, variable );
+					}, variable, cancellationToken );
 			}
 			else
 				throw new ArgumentException( "Variable can either be a field or a property" );
 
         }
 
-		public void BindTo( Type variableType, string variableName, Getter getter, Setter setter, MemberInfo variable = null )
+		public async UniTask BindTo( Type variableType, string variableName, Getter getter, Setter setter, MemberInfo variable = null, CancellationToken cancellationToken = default)
 		{
 			m_boundVariableType = variableType;
 			Name = variableName;
@@ -192,34 +192,36 @@ namespace RuntimeInspectorNamespace
 			this.getter = getter;
 			this.setter = setter;
 
-			OnBound( variable );
+			await OnBound( variable, cancellationToken );
 		}
 
-		public void Unbind()
+		public async UniTask Unbind(CancellationToken cancellationToken = default)
 		{
 			m_boundVariableType = null;
 
 			getter = null;
 			setter = null;
 
-			OnUnbound();
+			await OnUnbound( cancellationToken );
 			Inspector.PoolDrawer( this );
 		}
 
-		protected virtual void OnBound(MemberInfo variable)
+		protected virtual UniTask OnBound(MemberInfo variable, CancellationToken cancellationToken = default)
 		{
 			RefreshValue();
+            return UniTask.CompletedTask;
 		}
 
-
-		protected virtual void OnBoundInternal (MemberInfo variable)
+		protected virtual UniTask OnBoundInternal (MemberInfo variable, CancellationToken cancellationToken = default)
         {
             RefreshValue();
+            return UniTask.CompletedTask;
         }
 
-        protected virtual void OnUnbound()
+        protected virtual UniTask OnUnbound(CancellationToken cancellationToken = default)
 		{
 			m_value = null;
+            return UniTask.CompletedTask;
 		}
 
 		protected virtual void OnInspectorChanged()
@@ -267,7 +269,7 @@ namespace RuntimeInspectorNamespace
 
         public async UniTask Refresh()
         {
-            if (RefreshCancellationTokenSource is { IsCancellationRequested: false })
+            if (RefreshCancellationTokenSource is { IsCancellationRequested: false, Token.CanBeCanceled: true })
                  RefreshCancellationTokenSource.Cancel();
 
             var newCancellationTokenSource = new CancellationTokenSource();
@@ -412,14 +414,14 @@ namespace RuntimeInspectorNamespace
 			IsExpanded = m_isExpanded;
 		}
 
-		protected override void OnUnbound()
+		protected override async UniTask OnUnbound(CancellationToken cancellationToken = default)
 		{
-			base.OnUnbound();
+			await base.OnUnbound(cancellationToken);
 
 			IsExpanded = false;
 			HeaderVisibility = RuntimeInspector.HeaderVisibility.Collapsible;
 
-			ClearElements();
+			await ClearElements(cancellationToken);
 		}
 
 		protected override void OnInspectorChanged()
@@ -470,26 +472,26 @@ namespace RuntimeInspectorNamespace
 				elements[i].Depth = Depth + 1;
 		}
 
-		internal void RegenerateElements()
+		internal async UniTask RegenerateElements(CancellationToken cancellationToken = default)
 		{
 			if( elements.Count > 0 || exposedMethods.Count > 0 )
-				ClearElements();
+				await ClearElements(cancellationToken);
 
 			if( Depth < Inspector.NestLimit )
 			{
 				drawArea.gameObject.SetActive( true );
-				GenerateElements();
-				GenerateExposedMethodButtons();
+                await GenerateElements(cancellationToken);
+				await GenerateExposedMethodButtons(cancellationToken);
 				drawArea.gameObject.SetActive( m_isExpanded );
 			}
 		}
 
-		protected abstract void GenerateElements();
+		protected abstract UniTask GenerateElements(CancellationToken cancellationToken = default);
 
-		private void GenerateExposedMethodButtons()
+		private async UniTask GenerateExposedMethodButtons(CancellationToken cancellationToken = default)
 		{
 			if( Inspector.ShowRemoveComponentButton && typeof( Component ).IsAssignableFrom( BoundVariableType ) && !typeof( Transform ).IsAssignableFrom( BoundVariableType ) )
-				CreateExposedMethodButton( GameObjectField.removeComponentMethod, () => this, ( value ) => { } );
+				await CreateExposedMethodButton( GameObjectField.removeComponentMethod, () => this, ( value ) => { }, cancellationToken );
 
 			ExposedMethod[] methods = BoundVariableType.GetExposedMethods();
 			if( methods != null )
@@ -499,18 +501,18 @@ namespace RuntimeInspectorNamespace
 				{
 					ExposedMethod method = methods[i];
 					if( ( isInitialized && method.VisibleWhenInitialized ) || ( !isInitialized && method.VisibleWhenUninitialized ) )
-						CreateExposedMethodButton( method, () => Value, ( value ) => Value = value );
+						await CreateExposedMethodButton( method, () => Value, ( value ) => Value = value, cancellationToken );
 				}
 			}
 		}
 
-		protected virtual void ClearElements()
+		protected virtual async UniTask ClearElements(CancellationToken cancellationToken = default)
 		{
 			for( int i = 0; i < elements.Count; i++ )
-				elements[i].Unbind();
+				await elements[i].Unbind(cancellationToken);
 
 			for( int i = 0; i < exposedMethods.Count; i++ )
-				exposedMethods[i].Unbind();
+                await exposedMethods[i].Unbind(cancellationToken);
 
 			elements.Clear();
 			exposedMethods.Clear();
@@ -523,7 +525,7 @@ namespace RuntimeInspectorNamespace
 			if( m_isExpanded )
 			{
 				if( Length != elements.Count )
-					RegenerateElements();
+					await RegenerateElements(cancellationToken);
 
 				for( int i = 0; i < elements.Count; i++ )
 				{
@@ -533,7 +535,7 @@ namespace RuntimeInspectorNamespace
 			}
 		}
 
-		public InspectorField CreateDrawerForComponent( Component component, string variableName = null )
+		public async UniTask<InspectorField> CreateDrawerForComponent( Component component, string variableName = null, CancellationToken cancellationToken = default )
 		{
 			InspectorField variableDrawer = Inspector.CreateDrawerForType( component.GetType(), drawArea, Depth + 1, false );
 			if( variableDrawer != null )
@@ -541,7 +543,7 @@ namespace RuntimeInspectorNamespace
 				if( variableName == null )
 					variableName = component.GetType().Name + " component";
 
-				variableDrawer.BindTo( component.GetType(), string.Empty, () => component, ( value ) => { } );
+				await variableDrawer.BindTo( component.GetType(), string.Empty, () => component, ( value ) => { }, cancellationToken: cancellationToken );
 				variableDrawer.NameRaw = variableName;
 
 				elements.Add( variableDrawer );
@@ -550,7 +552,7 @@ namespace RuntimeInspectorNamespace
 			return variableDrawer;
 		}
 
-		public InspectorField CreateDrawerForVariable( MemberInfo variable, string variableName = null )
+		public async UniTask<InspectorField> CreateDrawerForVariable( MemberInfo variable, string variableName = null, CancellationToken cancellationToken = default )
 		{
             Type variableType = variable switch
             {
@@ -563,7 +565,7 @@ namespace RuntimeInspectorNamespace
 			InspectorField variableDrawer = Inspector.CreateDrawerForType( variableType, drawArea, Depth + 1, true, variable );
 			if( variableDrawer != null )
 			{
-				variableDrawer.BindTo( this, variable, variableName == null ? null : string.Empty );
+				await variableDrawer.BindTo( this, variable, variableName == null ? null : string.Empty, cancellationToken: cancellationToken );
 				if( variableName != null )
 					variableDrawer.NameRaw = variableName;
 
@@ -573,12 +575,12 @@ namespace RuntimeInspectorNamespace
 			return variableDrawer;
 		}
 
-		public InspectorField CreateDrawer( Type variableType, string variableName, Getter getter, Setter setter, bool drawObjectsAsFields = true )
+		public async UniTask<InspectorField> CreateDrawer( Type variableType, string variableName, Getter getter, Setter setter, bool drawObjectsAsFields = true, CancellationToken cancellationToken = default )
 		{
 			InspectorField variableDrawer = Inspector.CreateDrawerForType( variableType, drawArea, Depth + 1, drawObjectsAsFields );
 			if( variableDrawer != null )
 			{
-				variableDrawer.BindTo( variableType, variableName == null ? null : string.Empty, getter, setter );
+				await variableDrawer.BindTo( variableType, variableName == null ? null : string.Empty, getter, setter, cancellationToken: cancellationToken );
 				if( variableName != null )
 					variableDrawer.NameRaw = variableName;
 
@@ -588,12 +590,12 @@ namespace RuntimeInspectorNamespace
 			return variableDrawer;
 		}
 
-		public ExposedMethodField CreateExposedMethodButton( ExposedMethod method, Getter getter, Setter setter )
+		public async UniTask<ExposedMethodField> CreateExposedMethodButton( ExposedMethod method, Getter getter, Setter setter, CancellationToken cancellationToken = default )
 		{
 			ExposedMethodField methodDrawer = (ExposedMethodField) Inspector.CreateDrawerForType( typeof( ExposedMethod ), drawArea, Depth + 1, false );
 			if( methodDrawer != null )
 			{
-				methodDrawer.BindTo( typeof( ExposedMethod ), string.Empty, getter, setter );
+				await methodDrawer.BindTo( typeof( ExposedMethod ), string.Empty, getter, setter, cancellationToken: cancellationToken );
 				methodDrawer.SetBoundMethod( method );
 
 				exposedMethods.Add( methodDrawer );

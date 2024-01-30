@@ -67,9 +67,9 @@ namespace RuntimeInspectorNamespace
 #endif
 		}
 
-		protected override void OnBoundInternal( MemberInfo variable)
+		protected override async UniTask OnBoundInternal(MemberInfo variable, CancellationToken cancellationToken = default)
 		{
-            base.OnBoundInternal(variable);
+            await base.OnBoundInternal(variable, cancellationToken);
             if (!enumNames.TryGetValue(BoundVariableType, out currEnumNames) || !enumValues.TryGetValue(BoundVariableType, out currEnumValues))
             {
                 string[] names = Enum.GetNames(BoundVariableType);
@@ -92,27 +92,25 @@ namespace RuntimeInspectorNamespace
             input.AddOptions(currEnumNames);
         }
 
-		protected override void OnBound( MemberInfo variable )
+		protected override async UniTask OnBound( MemberInfo variable, CancellationToken cancellationToken = default )
 		{
-
-
             if (variable is ShaderPropertyInfo shaderPropertyInfo && BoundVariableType == typeof(ShaderPropertyInfo.MaterialEnum))
 			{
-				RuntimeInspectorNamespace.EnumField.enumNames[typeof(ShaderPropertyInfo.MaterialEnum)] = shaderPropertyInfo.explicitEnumNames.ToList();
-				RuntimeInspectorNamespace.EnumField.enumValues[typeof(ShaderPropertyInfo.MaterialEnum)] = shaderPropertyInfo.explicitEnumValues.ToList();
+				enumNames[typeof(ShaderPropertyInfo.MaterialEnum)] = shaderPropertyInfo.explicitEnumNames.ToList();
+				enumValues[typeof(ShaderPropertyInfo.MaterialEnum)] = shaderPropertyInfo.explicitEnumValues.ToList();
 
 				try
 				{
-					OnBoundInternal(variable);
+					await OnBoundInternal(variable, cancellationToken);
 					return;
 				}
 				finally
 				{
-					RuntimeInspectorNamespace.EnumField.enumNames.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
-					RuntimeInspectorNamespace.EnumField.enumValues.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
+					enumNames.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
+					enumValues.Remove(typeof(ShaderPropertyInfo.MaterialEnum));
 				}
             }
-            OnBoundInternal(variable);
+            await OnBoundInternal(variable, cancellationToken);
         }
 
 		protected override void OnInspectorChanged()
