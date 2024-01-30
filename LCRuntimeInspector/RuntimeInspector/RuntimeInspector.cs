@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using LCRuntimeInspector;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.LowLevel;
 using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
@@ -254,6 +257,14 @@ namespace RuntimeInspectorNamespace
 			Initialize();
 		}
 
+        protected void Start()
+        {
+            if (!PlayerLoopHelper.IsInjectedUniTaskPlayerLoop()) {
+                var loop = PlayerLoop.GetCurrentPlayerLoop();
+                PlayerLoopHelper.Initialize(ref loop, InjectPlayerLoopTimings.Minimum);
+            }
+        }
+
 		private void Initialize()
 		{
 			if( initialized )
@@ -498,7 +509,7 @@ namespace RuntimeInspectorNamespace
 				InspectorField inspectedObjectDrawer = CreateDrawerForType( obj.GetType(), drawArea, 0, false );
 				if( inspectedObjectDrawer != null )
 				{
-					await inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value );
+					await inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value, cancellationToken: cancellationToken );
 					inspectedObjectDrawer.NameRaw = obj.GetNameWithType();
 					await inspectedObjectDrawer.Refresh(cancellationToken);
 
@@ -567,27 +578,24 @@ namespace RuntimeInspectorNamespace
 			ObjectReferencePicker.Instance.Close();
 		}
 
-		public InspectorField CreateDrawerForType( Type type, Transform drawerParent, int depth, bool drawObjectsAsFields = true, MemberInfo variable = null )
+		public InspectorField? CreateDrawerForType( Type type, Transform drawerParent, int depth, bool drawObjectsAsFields = true, MemberInfo variable = null )
 		{
 			InspectorField[] variableDrawers = GetDrawersForType( type, drawObjectsAsFields );
-			if( variableDrawers != null )
-			{
-				for( int i = 0; i < variableDrawers.Length; i++ )
-				{
-					if( variableDrawers[i].CanBindTo( type, variable ) )
-					{
-						InspectorField drawer = InstantiateDrawer( variableDrawers[i], drawerParent );
-						drawer.Inspector = this;
-						drawer.Skin = Skin;
-						drawer.Depth = depth;
+            if (variableDrawers is null or { Length: 0 }) return null;
 
-						return drawer;
-					}
-				}
-			}
+            var compatibleDrawer = variableDrawers
+                .FirstOrDefault(drawer => drawer.CanBindTo(type, variable));
+            if (compatibleDrawer is null) return null;
 
-			return null;
-		}
+            Plugin.logger.LogWarning($"Selected {compatibleDrawer} for type {type}, of {variableDrawers.Length} options");
+
+            InspectorField drawer = InstantiateDrawer(compatibleDrawer, drawerParent);
+            drawer.Inspector = this;
+            drawer.Skin = Skin;
+            drawer.Depth = depth;
+
+            return drawer;
+        }
 
 		private InspectorField InstantiateDrawer( InspectorField drawer, Transform drawerParent )
 		{
@@ -629,10 +637,11 @@ namespace RuntimeInspectorNamespace
 			for( int i = settings.Length - 1; i >= 0; i-- )
 			{
 				InspectorField[] drawers = searchReferenceFields ? settings[i].ReferenceDrawers : settings[i].StandardDrawers;
-				for( int j = drawers.Length - 1; j >= 0; j-- )
-				{
-					if( drawers[j].SupportsType( type ) )
-						eligibleDrawers.Add( drawers[j] );
+				for( int j = drawers.Length - 1; j >= 0; j-- ) {
+                    if (!drawers[j].SupportsType(type)) continue;
+
+                    Plugin.logger.LogWarning($"found compatible field {drawers[j]} for type {type}");
+					eligibleDrawers.Add( drawers[j] );
 				}
 			}
 

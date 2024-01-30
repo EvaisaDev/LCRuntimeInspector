@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using LCRuntimeInspector;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -74,7 +74,7 @@ namespace RuntimeInspectorNamespace
 			if( ( customEditor = RuntimeInspectorUtils.GetCustomEditor( Value.GetType() ) ) != null )
 				await customEditor.GenerateElements( this, cancellationToken );
 			else
-				await CreateDrawersForVariables(Array.Empty<string>(), cancellationToken: cancellationToken);
+				await CreateDrawersForVariables(cancellationToken);
 		}
 
 		protected override async UniTask ClearElements(CancellationToken cancellationToken = default)
@@ -102,79 +102,29 @@ namespace RuntimeInspectorNamespace
 				await customEditor.Refresh(cancellationToken);
 		}
 
-		internal async UniTask CreateDrawersForVariablesInternal(string[] variables, CancellationToken cancellationToken = default)
-		{
-            if (variables == null || variables.Length == 0)
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                    await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
-            }
-            else
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                {
-                    if (Array.IndexOf(variables, variable.Name) >= 0)
-                        await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
-                }
-            }
+        protected async UniTask CreateDrawersForMembers(IEnumerable<MemberInfo> members, CancellationToken cancellationToken = default)
+        {
+            await UniTask.WhenAll(
+                members.Select(member => CreateDrawerForVariable(member, cancellationToken: cancellationToken))
+            );
         }
 
-
-        public async UniTask CreateDrawersForVariables(string[] variables, CancellationToken cancellationToken = default)
-		{
-            if (Value is Material item)
-            {
-                ShaderInspector.targetMats.Push(item);
-                try
-                {
-                    await CreateDrawersForVariablesInternal(variables, cancellationToken: cancellationToken);
-                    return;
-                }
-                finally
-                {
-                    ShaderInspector.targetMats.Pop();
-                }
-            }
-			await CreateDrawersForVariablesInternal(variables, cancellationToken: cancellationToken);
+        public async UniTask CreateDrawersForVariables(CancellationToken cancellationToken)
+        {
+            await CreateDrawersForMembers(ExposedVariablesForValueType, cancellationToken);
         }
 
-		internal async UniTask CreateDrawersForVariablesExcludingInternal(string[] variablesToExclude, CancellationToken cancellationToken = default)
-		{
-            if (variablesToExclude == null || variablesToExclude.Length == 0)
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                    await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
-            }
-            else
-            {
-                foreach (MemberInfo variable in Inspector.GetExposedVariablesForType(Value.GetType()))
-                {
-                    if (Array.IndexOf(variablesToExclude, variable.Name) < 0)
-                        await CreateDrawerForVariable(variable, cancellationToken: cancellationToken);
-                }
-            }
+        public async UniTask CreateDrawersForVariables(MemberFilter filter, object filterCriteria, CancellationToken cancellationToken = default)
+        {
+            var members = ExposedVariablesForValueType.Where(FilterAcceptsMember);
+            await CreateDrawersForMembers(members, cancellationToken);
+
+            bool FilterAcceptsMember(MemberInfo member) => filter(member, filterCriteria);
         }
 
+        protected virtual IEnumerable<MemberInfo> ExposedVariablesForValueType => Inspector.GetExposedVariablesForType(Value.GetType());
 
-        public async UniTask CreateDrawersForVariablesExcluding(string[] variablesToExclude, CancellationToken cancellationToken = default)
-		{
-            if (Value is Material item)
-            {
-                ShaderInspector.targetMats.Push(item);
-                try
-                {
-                    await CreateDrawersForVariablesExcludingInternal(variablesToExclude, cancellationToken);
-                    return;
-                }
-                finally
-                {
-                    ShaderInspector.targetMats.Pop();
-                }
-            }
-            await CreateDrawersForVariablesExcludingInternal(variablesToExclude, cancellationToken);
-        }
-
-		private bool CanInitializeNewObject()
+        private bool CanInitializeNewObject()
 		{
 #if UNITY_EDITOR || !NETFX_CORE
 			if( BoundVariableType.IsAbstract || BoundVariableType.IsInterface )
