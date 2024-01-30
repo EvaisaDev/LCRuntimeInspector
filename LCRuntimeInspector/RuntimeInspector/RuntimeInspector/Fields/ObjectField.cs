@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using LCRuntimeInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -92,12 +94,12 @@ namespace RuntimeInspectorNamespace
 			initializeObjectButton.SetSkinButton( Skin );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( customEditor != null )
-				customEditor.Refresh();
+				await customEditor.Refresh(cancellationToken);
 		}
 
 		internal void CreateDrawersForVariablesInternal(params string[] variables)

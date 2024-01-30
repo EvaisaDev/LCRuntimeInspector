@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace RuntimeInspectorNamespace
@@ -70,9 +72,9 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) input.transform ).anchorMin = new Vector2( 1f - inputFieldWidth, 0f );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 			slider.Value = numberHandler.ConvertToFloat( Value );
 		}
 	}

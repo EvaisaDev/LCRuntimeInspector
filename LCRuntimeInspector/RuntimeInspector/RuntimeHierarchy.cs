@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
@@ -289,7 +290,7 @@ namespace RuntimeInspectorNamespace
 					{
 						if( m_currentSelection[i] )
 						{
-							m_connectedInspector.Inspect( m_currentSelection[i].gameObject );
+							m_connectedInspector.Inspect( m_currentSelection[i].gameObject ).Forget();
 							break;
 						}
 					}
@@ -644,7 +645,7 @@ namespace RuntimeInspectorNamespace
 							m_currentSelection.Add( currentlyPressedDrawer.Data.BoundTransform );
 							currentlyPressedDrawer.IsSelected = true;
 
-							OnCurrentSelectionChanged();
+							OnCurrentSelectionChanged().Forget();
 						}
 
 						MultiSelectionToggleSelectionMode = true;
@@ -970,7 +971,7 @@ namespace RuntimeInspectorNamespace
 						}
 					}
 
-					OnCurrentSelectionChanged();
+					OnCurrentSelectionChanged().Forget();
 				}
 
 				if( m_isInSearchMode )
@@ -1220,7 +1221,7 @@ namespace RuntimeInspectorNamespace
 				return true;
 
 			if( hasSelectionChanged )
-				OnCurrentSelectionChanged();
+				OnCurrentSelectionChanged().Forget();
 
 			// Make sure that the contents of the hierarchy are up-to-date
 			Refresh();
@@ -1344,7 +1345,7 @@ namespace RuntimeInspectorNamespace
 						drawers[i].IsSelected = false;
 				}
 
-				OnCurrentSelectionChanged();
+				OnCurrentSelectionChanged().Forget();
 			}
 		}
 
@@ -1390,7 +1391,7 @@ namespace RuntimeInspectorNamespace
 			return true;
 		}
 
-		private void OnCurrentSelectionChanged()
+		private async UniTask OnCurrentSelectionChanged()
 		{
 			selectLock = true;
 			try
@@ -1415,7 +1416,7 @@ namespace RuntimeInspectorNamespace
 					{
 						if( m_currentSelection[i] )
 						{
-							m_connectedInspector.Inspect( m_currentSelection[i].gameObject );
+							await m_connectedInspector.Inspect( m_currentSelection[i].gameObject );
 							break;
 						}
 					}

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -178,13 +180,13 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) inputH.transform ).SetAnchorMinMaxInputField( labelH.rectTransform, rightSideAnchorMin, new Vector2( rightSideAnchorMax.x, 0.5f ) );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 #if UNITY_2017_2_OR_NEWER
 			if( isRectInt )
 			{
 				RectInt prevVal = (RectInt) Value;
-				base.Refresh();
+				await base.Refresh(cancellationToken);
 				RectInt val = (RectInt) Value;
 
 				if( val.x != prevVal.x )
@@ -200,7 +202,7 @@ namespace RuntimeInspectorNamespace
 #endif
 			{
 				Rect prevVal = (Rect) Value;
-				base.Refresh();
+				await base.Refresh(cancellationToken);
 				Rect val = (Rect) Value;
 
 				if( val.x != prevVal.x )

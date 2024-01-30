@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -219,6 +221,7 @@ namespace RuntimeInspectorNamespace
 		private InspectorField currentDrawer = null;
 		private bool inspectLock = false;
 		private bool isDirty = false;
+        private CancellationTokenSource? inspectCancellationTokenSource = null;
 
 		private object m_inspectedObject;
 		public object InspectedObject { get { return m_inspectedObject; } }
@@ -240,7 +243,7 @@ namespace RuntimeInspectorNamespace
 			set
 			{
 				m_componentFilter = value;
-				Refresh();
+				Refresh().Forget();
 			}
 		}
 
@@ -354,7 +357,7 @@ namespace RuntimeInspectorNamespace
 					// Rebind to refresh the exposed variables in Inspector
 					object inspectedObject = m_inspectedObject;
 					StopInspectInternal();
-					InspectInternal( inspectedObject );
+					InspectInternal( inspectedObject ).Forget();
 
 					isDirty = false;
 					nextRefreshTime = time + m_refreshInterval;
@@ -364,7 +367,7 @@ namespace RuntimeInspectorNamespace
 					if( time > nextRefreshTime )
 					{
 						nextRefreshTime = time + m_refreshInterval;
-						Refresh();
+						Refresh().Forget();
 					}
 				}
 			}
@@ -372,14 +375,14 @@ namespace RuntimeInspectorNamespace
 				StopInspectInternal();
 		}
 
-		public void Refresh()
+		public async UniTask Refresh()
 		{
 			if( IsBound )
 			{
 				if( currentDrawer == null )
 					m_inspectedObject = null;
 				else
-					currentDrawer.Refresh();
+					await currentDrawer.Refresh();
 			}
 		}
 
@@ -387,14 +390,14 @@ namespace RuntimeInspectorNamespace
 		// when their values have changed. If a drawer is bound to a property whose setter
 		// may modify the input data (e.g. when input data is 20 but the setter clamps it to 10),
 		// the drawer's BoundInputFields will still show the unmodified input data (20) until the
-		// next Refresh. That is because BoundInputFields don't have access to the fields/properties 
+		// next Refresh. That is because BoundInputFields don't have access to the fields/properties
 		// they are modifying, there is no way for the BoundInputFields to know whether or not
 		// the property has modified the input data (changed it from 20 to 10).
-		// 
+		//
 		// Why not refresh only the changed InspectorDrawers? Because changing a property may affect
 		// multiple fields/properties that are bound to other drawers, we don't know which
 		// drawers may be affected. The safest way is to refresh all the drawers.
-		// 
+		//
 		// Why not Refresh? That's the hacky part: most drawers call this function in their
 		// BoundInputFields' OnValueSubmitted event. If Refresh was used, BoundInputField's
 		// "recentText = str;" line that is called after the OnValueSubmitted event would mess up
@@ -423,13 +426,32 @@ namespace RuntimeInspectorNamespace
 				currentDrawer.Skin = Skin;
 		}
 
-		public void Inspect( object obj )
-		{
-			if( !m_isLocked )
-				InspectInternal( obj );
-		}
+		public async UniTask Inspect( object obj )
+        {
+            if (m_isLocked) return;
 
-		internal void InspectInternal( object obj )
+            await InspectInternal(obj);
+        }
+
+        internal async UniTask InspectInternal(object obj)
+        {
+            if (inspectCancellationTokenSource is { IsCancellationRequested: false })
+                inspectCancellationTokenSource.Cancel();
+
+            var newCancellationTokenSource = new CancellationTokenSource();
+            inspectCancellationTokenSource = newCancellationTokenSource;
+            try {
+                await InspectInternal(obj, newCancellationTokenSource.Token);
+            }
+            finally {
+                if (inspectCancellationTokenSource == newCancellationTokenSource)
+                    inspectCancellationTokenSource = null;
+
+                newCancellationTokenSource.Dispose();
+            }
+        }
+
+		internal async UniTask InspectInternal( object obj, CancellationToken cancellationToken )
 		{
 			if( inspectLock )
 				return;
@@ -476,7 +498,7 @@ namespace RuntimeInspectorNamespace
 				{
 					inspectedObjectDrawer.BindTo( obj.GetType(), string.Empty, () => m_inspectedObject, ( value ) => m_inspectedObject = value );
 					inspectedObjectDrawer.NameRaw = obj.GetNameWithType();
-					inspectedObjectDrawer.Refresh();
+					await inspectedObjectDrawer.Refresh(cancellationToken);
 
 					if( inspectedObjectDrawer is ExpandableInspectorField )
 						( (ExpandableInspectorField) inspectedObjectDrawer ).IsExpanded = true;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 
 namespace RuntimeInspectorNamespace
@@ -86,12 +88,12 @@ namespace RuntimeInspectorNamespace
 			inputExtents.Depth = Depth + 1;
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
-			inputCenter.Refresh();
-			inputExtents.Refresh();
+			await inputCenter.Refresh(cancellationToken);
+			await inputExtents.Refresh(cancellationToken);
 		}
 	}
 }

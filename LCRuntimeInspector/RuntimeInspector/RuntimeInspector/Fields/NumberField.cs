@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -78,10 +80,10 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) input.transform ).anchorMin = rightSideAnchorMin;
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 			object prevVal = Value;
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( !numberHandler.ValuesAreEqual( Value, prevVal ) )
 				input.Text = numberHandler.ToString( Value );

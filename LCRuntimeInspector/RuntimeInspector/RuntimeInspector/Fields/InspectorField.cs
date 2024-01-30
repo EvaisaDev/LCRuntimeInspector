@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using LCRuntimeInspector;
 using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using UnityEngine;
@@ -105,6 +107,7 @@ namespace RuntimeInspectorNamespace
 		bool ITooltipContent.IsActive { get { return this && gameObject.activeSelf; } }
 		string ITooltipContent.TooltipText { get { return NameRaw; } }
 
+        protected CancellationTokenSource? RefreshCancellationTokenSource;
 		public virtual bool ShouldRefresh { get { return m_isVisible; } }
 
 		protected virtual float HeightMultiplier { get { return 1f; } }
@@ -262,10 +265,29 @@ namespace RuntimeInspectorNamespace
 				variableNameText.rectTransform.sizeDelta = new Vector2( -Skin.IndentAmount * Depth, 0f );
 		}
 
-		public virtual void Refresh()
-		{
-			RefreshValue();
-		}
+        public async UniTask Refresh()
+        {
+            if (RefreshCancellationTokenSource is { IsCancellationRequested: false })
+                 RefreshCancellationTokenSource.Cancel();
+
+            var newCancellationTokenSource = new CancellationTokenSource();
+            RefreshCancellationTokenSource = newCancellationTokenSource;
+            try {
+                await Refresh(newCancellationTokenSource.Token);
+            }
+            finally {
+                if (RefreshCancellationTokenSource == newCancellationTokenSource)
+                    RefreshCancellationTokenSource = null;
+
+                newCancellationTokenSource.Dispose();
+            }
+        }
+
+		public virtual UniTask Refresh(CancellationToken cancellationToken)
+        {
+            RefreshValue();
+            return UniTask.CompletedTask;
+        }
 
 		private void RefreshValue()
 		{
@@ -315,17 +337,16 @@ namespace RuntimeInspectorNamespace
 		public bool IsExpanded
 		{
 			get { return m_isExpanded; }
-			set
-			{
-				m_isExpanded = value;
-				drawArea.gameObject.SetActive( m_isExpanded );
+            set {
+                m_isExpanded = value;
+                drawArea.gameObject.SetActive(m_isExpanded);
 
-				if( expandArrow != null )
-					expandArrow.rectTransform.localEulerAngles = m_isExpanded ? new Vector3( 0f, 0f, -90f ) : Vector3.zero;
+                if (expandArrow != null)
+                    expandArrow.rectTransform.localEulerAngles = m_isExpanded ? new Vector3(0f, 0f, -90f) : Vector3.zero;
 
-				if( m_isExpanded )
-					Refresh();
-			}
+                if (m_isExpanded)
+                    Refresh().Forget();
+            }
 		}
 
 		private RuntimeInspector.HeaderVisibility m_headerVisibility = RuntimeInspector.HeaderVisibility.Collapsible;
@@ -495,9 +516,9 @@ namespace RuntimeInspectorNamespace
 			exposedMethods.Clear();
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			if( m_isExpanded )
 			{
@@ -507,7 +528,7 @@ namespace RuntimeInspectorNamespace
 				for( int i = 0; i < elements.Count; i++ )
 				{
 					if( elements[i].ShouldRefresh )
-						elements[i].Refresh();
+						await elements[i].Refresh(cancellationToken);
 				}
 			}
 		}

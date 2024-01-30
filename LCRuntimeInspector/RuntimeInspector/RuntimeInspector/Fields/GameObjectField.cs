@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -117,7 +119,7 @@ namespace RuntimeInspectorNamespace
 			componentsExpandedStates.Clear();
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 			// Refresh components
 			components.Clear();
@@ -137,7 +139,7 @@ namespace RuntimeInspectorNamespace
 			}
 
 			// Regenerate components' drawers, if necessary
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 		}
 
 		[UnityEngine.Scripting.Preserve] // This method is bound to addComponentMethod
@@ -155,7 +157,7 @@ namespace RuntimeInspectorNamespace
 				Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
 #else
 				// Common Unity assemblies
-				IEnumerable<Assembly> assemblies = new HashSet<Assembly> 
+				IEnumerable<Assembly> assemblies = new HashSet<Assembly>
 				{
 					typeof( Transform ).Assembly,
 					typeof( RectTransform ).Assembly,
@@ -207,7 +209,7 @@ namespace RuntimeInspectorNamespace
 					if( type != null && target && Inspector && ( Inspector.InspectedObject as GameObject ) == target )
 					{
 						target.AddComponent( (Type) type );
-						Inspector.Refresh();
+						Inspector.Refresh().Forget();
 					}
 				},
 				( type ) => ( (Type) type ).FullName,
@@ -223,17 +225,17 @@ namespace RuntimeInspectorNamespace
 
 			Component component = componentDrawer.Value as Component;
 			if( component && !( component is Transform ) )
-				componentDrawer.StartCoroutine( RemoveComponentCoroutine( component, componentDrawer.Inspector ) );
+				RemoveComponentAsync( component, componentDrawer.Inspector ).Forget();
 		}
 
-		private static IEnumerator RemoveComponentCoroutine( Component component, RuntimeInspector inspector )
+		private static async UniTask RemoveComponentAsync( Component component, RuntimeInspector inspector )
 		{
 			Destroy( component );
 
 			// Destroy operation doesn't take place immediately, wait for the component to be fully destroyed
-			yield return null;
+            await UniTask.NextFrame();
 
-			inspector.Refresh();
+			await inspector.Refresh();
 			inspector.EnsureScrollViewIsWithinBounds(); // Scroll view's contents can get out of bounds after removing a component
 		}
 	}

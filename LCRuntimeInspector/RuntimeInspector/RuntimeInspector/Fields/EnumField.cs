@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using LCRuntimeInspector.RuntimeInspector.RuntimeInspector;
 using UnityEngine;
 using UnityEngine.UI;
@@ -176,9 +178,9 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) input.transform ).anchorMin = rightSideAnchorMin;
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
-			base.Refresh();
+			await base.Refresh(cancellationToken);
 
 			int valueIndex = currEnumValues.IndexOf( Value );
 			if( valueIndex != -1 )

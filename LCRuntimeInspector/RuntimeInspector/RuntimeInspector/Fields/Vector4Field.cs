@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Globalization;
 using System.Reflection;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -164,12 +166,12 @@ namespace RuntimeInspectorNamespace
 			( (RectTransform) inputW.transform ).SetAnchorMinMaxInputField( labelW.rectTransform, rightSideAnchorMin, new Vector2( rightSideAnchorMax.x, 0.5f ) );
 		}
 
-		public override void Refresh()
+		public override async UniTask Refresh(CancellationToken cancellationToken)
 		{
 			if( isQuaternion )
 			{
 				Quaternion prevVal = (Quaternion) Value;
-				base.Refresh();
+				await base.Refresh(cancellationToken);
 				Quaternion val = (Quaternion) Value;
 
 				if( val.x != prevVal.x )
@@ -184,7 +186,7 @@ namespace RuntimeInspectorNamespace
 			else
 			{
 				Vector4 prevVal = (Vector4) Value;
-				base.Refresh();
+				await base.Refresh(cancellationToken);
 				Vector4 val = (Vector4) Value;
 
 				if( val.x != prevVal.x )

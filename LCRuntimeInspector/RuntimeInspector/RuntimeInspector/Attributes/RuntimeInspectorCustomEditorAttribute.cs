@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
 
 namespace RuntimeInspectorNamespace
 {
@@ -35,7 +37,7 @@ namespace RuntimeInspectorNamespace
 	public interface IRuntimeInspectorCustomEditor
 	{
 		void GenerateElements( ObjectField parent );
-		void Refresh();
+		UniTask Refresh(CancellationToken cancellationToken);
 		void Cleanup();
 	}
 }
