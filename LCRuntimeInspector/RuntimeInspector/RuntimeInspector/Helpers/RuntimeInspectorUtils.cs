@@ -954,6 +954,7 @@ namespace RuntimeInspectorNamespace
 					}
 					catch( NotSupportedException ) { }
 					catch( System.IO.FileNotFoundException ) { }
+                    catch(ReflectionTypeLoadException) { }
 					catch( Exception e )
 					{
 						Debug.LogError( "Couldn't search assembly for RuntimeInspectorCustomEditor attributes: " + assembly.GetName().Name + "\n" + e.ToString() );
